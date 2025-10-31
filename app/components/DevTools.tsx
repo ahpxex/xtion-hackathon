@@ -14,6 +14,11 @@ export default function DevTools() {
     setStage(prev => prev + amount);
   };
 
+  const resetState = () => {
+    setClickCount(0);
+    setStage(0);
+  };
+
   return (
     <div className="fixed top-4 right-4 z-[10000]">
       {!isOpen ? (
@@ -68,6 +73,17 @@ export default function DevTools() {
                   +10K
                 </button>
               </div>
+            </div>
+
+            {/* Reset */}
+            <div>
+              <div className="text-xs text-gray-400 mb-2">Reset</div>
+              <button
+                onClick={resetState}
+                className="w-full bg-red-600 hover:bg-red-500 px-3 py-2 rounded text-sm transition-colors"
+              >
+                Reset Points & Stage
+              </button>
             </div>
 
           </div>
