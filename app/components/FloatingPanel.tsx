@@ -1,25 +1,25 @@
-'use client';
+"use client";
 
-import { useState, useRef, useEffect, ReactNode } from 'react';
-import { useAtom } from 'jotai';
-import { toastsAtom, showFloatingPanelAtom } from '../store/atoms';
-import Toast from './Toast';
+import { useState, useRef, useEffect, ReactNode } from "react";
+import { useAtom } from "jotai";
+import { toastsAtom, showFloatingPanelAtom } from "../store/atoms";
+import Toast from "./Toast";
+import { Bell } from "lucide-react";
 
 interface FloatingPanelProps {
   defaultPosition?: { x: number; y: number };
 }
 
-export default function FloatingPanel({
-  defaultPosition,
-}: FloatingPanelProps) {
+export default function FloatingPanel({ defaultPosition }: FloatingPanelProps) {
   const [toasts, setToasts] = useAtom(toastsAtom);
   const [showFloatingPanel] = useAtom(showFloatingPanelAtom);
 
-  if (!showFloatingPanel) {
-    return null;
-  }
+  // 所有 hooks 必须在条件判断之前调用
   const [position, setPosition] = useState(
-    defaultPosition || { x: window.innerWidth - 150, y: window.innerHeight - 150 }
+    defaultPosition || {
+      x: window.innerWidth - 150,
+      y: window.innerHeight - 150,
+    }
   );
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -39,14 +39,14 @@ export default function FloatingPanel({
   // 模拟随机弹出消息
   useEffect(() => {
     const messages = [
-      { type: 'info' as const, text: '系统运行正常' },
-      { type: 'success' as const, text: '数据同步成功' },
-      { type: 'warning' as const, text: '内存使用率较高' },
-      { type: 'error' as const, text: '连接超时' },
-      { type: 'info' as const, text: '有新的更新可用' },
-      { type: 'success' as const, text: '备份完成' },
-      { type: 'warning' as const, text: '磁盘空间不足' },
-      { type: 'info' as const, text: '收到新消息' },
+      { type: "info" as const, text: "系统运行正常" },
+      { type: "success" as const, text: "数据同步成功" },
+      { type: "warning" as const, text: "内存使用率较高" },
+      { type: "error" as const, text: "连接超时" },
+      { type: "info" as const, text: "有新的更新可用" },
+      { type: "success" as const, text: "备份完成" },
+      { type: "warning" as const, text: "磁盘空间不足" },
+      { type: "info" as const, text: "收到新消息" },
     ];
 
     const randomInterval = () => {
@@ -55,10 +55,13 @@ export default function FloatingPanel({
 
     const scheduleNextToast = () => {
       const timer = setTimeout(() => {
-        const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+        const randomMessage =
+          messages[Math.floor(Math.random() * messages.length)];
 
         setToasts((toasts) => {
-          const id = `toast_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+          const id = `toast_${Date.now()}_${Math.random()
+            .toString(36)
+            .substr(2, 9)}`;
           return [
             ...toasts,
             {
@@ -83,44 +86,43 @@ export default function FloatingPanel({
 
   // 监听 toast 数量变化，当有新 toast 时随机移动面板
   useEffect(() => {
+    const moveToRandomPosition = () => {
+      if (!panelRef.current) return;
+
+      const panelWidth = panelRef.current.offsetWidth;
+      const panelHeight = panelRef.current.offsetHeight;
+
+      // 计算可用空间
+      const maxX = window.innerWidth - panelWidth;
+      const maxY = window.innerHeight - panelHeight;
+
+      // 确保至少有 50px 的边距
+      const minX = 50;
+      const minY = 50;
+      const safeMaxX = Math.max(minX, maxX - 50);
+      const safeMaxY = Math.max(minY, maxY - 50);
+
+      // 生成随机位置
+      const newX = Math.random() * (safeMaxX - minX) + minX;
+      const newY = Math.random() * (safeMaxY - minY) + minY;
+
+      setIsAnimating(true);
+      setPosition({
+        x: Math.max(0, Math.min(newX, maxX)),
+        y: Math.max(0, Math.min(newY, maxY)),
+      });
+
+      // 动画结束后重置状态
+      setTimeout(() => {
+        setIsAnimating(false);
+      }, 400);
+    };
     if (toasts.length > previousToastCountRef.current && !isDragging) {
       // 有新 toast 添加，触发随机移动
       moveToRandomPosition();
     }
     previousToastCountRef.current = toasts.length;
   }, [toasts.length, isDragging]);
-
-  const moveToRandomPosition = () => {
-    if (!panelRef.current) return;
-
-    const panelWidth = panelRef.current.offsetWidth;
-    const panelHeight = panelRef.current.offsetHeight;
-
-    // 计算可用空间
-    const maxX = window.innerWidth - panelWidth;
-    const maxY = window.innerHeight - panelHeight;
-
-    // 确保至少有 50px 的边距
-    const minX = 50;
-    const minY = 50;
-    const safeMaxX = Math.max(minX, maxX - 50);
-    const safeMaxY = Math.max(minY, maxY - 50);
-
-    // 生成随机位置
-    const newX = Math.random() * (safeMaxX - minX) + minX;
-    const newY = Math.random() * (safeMaxY - minY) + minY;
-
-    setIsAnimating(true);
-    setPosition({
-      x: Math.max(0, Math.min(newX, maxX)),
-      y: Math.max(0, Math.min(newY, maxY)),
-    });
-
-    // 动画结束后重置状态
-    setTimeout(() => {
-      setIsAnimating(false);
-    }, 400);
-  };
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (panelRef.current) {
@@ -155,15 +157,20 @@ export default function FloatingPanel({
     };
 
     if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleMouseUp);
     }
 
     return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
     };
   }, [isDragging, dragOffset]);
+
+  // 条件判断必须在所有 hooks 之后
+  if (!showFloatingPanel) {
+    return null;
+  }
 
   return (
     <>
@@ -186,19 +193,21 @@ export default function FloatingPanel({
       <div
         ref={panelRef}
         className={`fixed bg-gray-500 rounded-full shadow-2xl flex items-center justify-center z-[9998] ${
-          isDragging ? 'cursor-grabbing' : 'cursor-grab'
-        } ${isAnimating ? 'transition-all duration-300 ease-in-out' : ''} hover:bg-gray-600`}
+          isDragging ? "cursor-grabbing" : "cursor-grab"
+        } ${
+          isAnimating ? "transition-all duration-300 ease-in-out" : ""
+        } hover:bg-gray-600`}
         style={{
           left: `${position.x}px`,
           top: `${position.y}px`,
-          width: '100px',
-          height: '100px',
+          width: "60px",
+          height: "60px",
         }}
         onMouseDown={handleMouseDown}
       >
         {/* 通知图标 */}
         <div className="relative">
-          <span className="text-5xl">🔔</span>
+          <Bell size={36} className="text-white" strokeWidth={2} />
           {/* 通知数量徽章 */}
           {toasts.length > 0 && (
             <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center animate-pulse">
