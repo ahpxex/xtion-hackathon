@@ -6,19 +6,15 @@ import { toastsAtom } from '../store/atoms';
 import Toast from './Toast';
 
 interface FloatingPanelProps {
-  children?: ReactNode;
   defaultPosition?: { x: number; y: number };
-  title?: string;
 }
 
 export default function FloatingPanel({
-  children,
   defaultPosition,
-  title = '浮动面板',
 }: FloatingPanelProps) {
-  const [toasts] = useAtom(toastsAtom);
+  const [toasts, setToasts] = useAtom(toastsAtom);
   const [position, setPosition] = useState(
-    defaultPosition || { x: window.innerWidth - 320, y: window.innerHeight - 200 }
+    defaultPosition || { x: window.innerWidth - 150, y: window.innerHeight - 150 }
   );
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -29,11 +25,56 @@ export default function FloatingPanel({
   useEffect(() => {
     if (!defaultPosition) {
       setPosition({
-        x: window.innerWidth - 320,
-        y: window.innerHeight - 200,
+        x: window.innerWidth - 150,
+        y: window.innerHeight - 150,
       });
     }
   }, [defaultPosition]);
+
+  // 模拟随机弹出消息
+  useEffect(() => {
+    const messages = [
+      { type: 'info' as const, text: '系统运行正常' },
+      { type: 'success' as const, text: '数据同步成功' },
+      { type: 'warning' as const, text: '内存使用率较高' },
+      { type: 'error' as const, text: '连接超时' },
+      { type: 'info' as const, text: '有新的更新可用' },
+      { type: 'success' as const, text: '备份完成' },
+      { type: 'warning' as const, text: '磁盘空间不足' },
+      { type: 'info' as const, text: '收到新消息' },
+    ];
+
+    const randomInterval = () => {
+      return Math.random() * 4000 + 2000; // 2-6秒之间随机
+    };
+
+    const scheduleNextToast = () => {
+      const timer = setTimeout(() => {
+        const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+
+        setToasts((toasts) => {
+          const id = `toast_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+          return [
+            ...toasts,
+            {
+              id,
+              message: randomMessage.text,
+              type: randomMessage.type,
+              duration: 3000,
+            },
+          ];
+        });
+
+        scheduleNextToast();
+      }, randomInterval());
+
+      return timer;
+    };
+
+    const timer = scheduleNextToast();
+
+    return () => clearTimeout(timer);
+  }, [setToasts]);
 
   // 监听 toast 数量变化，当有新 toast 时随机移动面板
   useEffect(() => {
@@ -136,37 +177,30 @@ export default function FloatingPanel({
         ))}
       </div>
 
-      {/* 浮动面板 */}
+      {/* 圆形通知图标 */}
       <div
         ref={panelRef}
-        className={`fixed bg-white rounded-lg shadow-2xl border-2 border-gray-300 overflow-hidden z-[9998] ${
-          isDragging ? 'cursor-grabbing' : ''
-        } ${isAnimating ? 'transition-all duration-300 ease-in-out' : ''}`}
+        className={`fixed bg-gray-500 rounded-full shadow-2xl flex items-center justify-center z-[9998] ${
+          isDragging ? 'cursor-grabbing' : 'cursor-grab'
+        } ${isAnimating ? 'transition-all duration-300 ease-in-out' : ''} hover:bg-gray-600`}
         style={{
           left: `${position.x}px`,
           top: `${position.y}px`,
-          minWidth: '280px',
-          maxWidth: '400px',
+          width: '100px',
+          height: '100px',
         }}
+        onMouseDown={handleMouseDown}
       >
-        {/* 可拖动的标题栏 */}
-        <div
-          className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-4 py-3 cursor-grab active:cursor-grabbing flex items-center justify-between"
-          onMouseDown={handleMouseDown}
-        >
-          <div className="flex items-center gap-2">
-            <span className="text-lg">🎯</span>
-            <h3 className="font-bold text-sm">{title}</h3>
-          </div>
-          <div className="flex gap-1">
-            <div className="w-3 h-3 rounded-full bg-red-400"></div>
-            <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
-            <div className="w-3 h-3 rounded-full bg-green-400"></div>
-          </div>
+        {/* 通知图标 */}
+        <div className="relative">
+          <span className="text-5xl">🔔</span>
+          {/* 通知数量徽章 */}
+          {toasts.length > 0 && (
+            <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center animate-pulse">
+              {toasts.length}
+            </div>
+          )}
         </div>
-
-        {/* 面板内容 */}
-        <div className="p-4">{children}</div>
       </div>
     </>
   );

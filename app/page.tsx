@@ -2,7 +2,6 @@ import NativeButton from "./components/NativeButton";
 import CreditDisplay from "./components/CreditDisplay";
 import Shop from "./components/Shop";
 import FloatingPanel from "./components/FloatingPanel";
-import ToastDemo from "./components/ToastDemo";
 
 export default function Home() {
   return (
@@ -11,9 +10,7 @@ export default function Home() {
       <NativeButton clickValue={1}>Native Button</NativeButton>
       <Shop />
 
-      <FloatingPanel title="通知中心">
-        <ToastDemo />
-      </FloatingPanel>
+      <FloatingPanel />
     </div>
   );
 }
