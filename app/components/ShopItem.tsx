@@ -11,6 +11,7 @@ export interface ShopItemData {
   price: number;
   effect: string;
   icon: string;
+  level: number; // 物品等级，最低为 1
 }
 
 interface ShopItemProps {
@@ -58,6 +59,10 @@ export default function ShopItem({ item, onPurchase }: ShopItemProps) {
           <h3 className="font-bold text-lg mb-2">{item.name}</h3>
           <p className="text-sm text-gray-600 mb-3">{item.description}</p>
           <div className="space-y-1">
+            <p className="text-sm">
+              <span className="font-semibold">等级：</span>
+              <span className="text-purple-600">Lv.{item.level}</span>
+            </p>
             <p className="text-sm">
               <span className="font-semibold">价格：</span>
               <span className={canAfford ? 'text-green-600' : 'text-red-600'}>

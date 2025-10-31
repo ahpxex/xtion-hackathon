@@ -10,6 +10,8 @@ export interface ToastData {
 
 export const clickCountAtom = atom(0);
 
+export const stageAtom = atom(0); // 游戏阶段 0-100
+
 export const toastsAtom = atom<ToastData[]>([]);
 
 export const shopItemsAtom = atom<ShopItemData[]>([
@@ -19,7 +21,8 @@ export const shopItemsAtom = atom<ShopItemData[]>([
     description: '每秒自动增加点数',
     price: 10,
     effect: '+1 点数/秒',
-    icon: '👆'
+    icon: '👆',
+    level: 1
   },
   {
     id: 'multiplier',
@@ -27,7 +30,8 @@ export const shopItemsAtom = atom<ShopItemData[]>([
     description: '使每次点击获得更多点数',
     price: 50,
     effect: '点击效果 x2',
-    icon: '✨'
+    icon: '✨',
+    level: 2
   },
   {
     id: 'factory',
@@ -35,7 +39,8 @@ export const shopItemsAtom = atom<ShopItemData[]>([
     description: '大幅提升自动生产效率',
     price: 100,
     effect: '+5 点数/秒',
-    icon: '🏭'
+    icon: '🏭',
+    level: 3
   },
   {
     id: 'bonus',
@@ -43,7 +48,8 @@ export const shopItemsAtom = atom<ShopItemData[]>([
     description: '点击时有机会获得额外点数',
     price: 75,
     effect: '10% 获得双倍点数',
-    icon: '🪙'
+    icon: '🪙',
+    level: 2
   },
   {
     id: 'robot',
@@ -51,7 +57,8 @@ export const shopItemsAtom = atom<ShopItemData[]>([
     description: '全自动点击系统',
     price: 200,
     effect: '+10 点数/秒',
-    icon: '🤖'
+    icon: '🤖',
+    level: 4
   },
   {
     id: 'rocket',
@@ -59,6 +66,7 @@ export const shopItemsAtom = atom<ShopItemData[]>([
     description: '点数增长加速',
     price: 500,
     effect: '所有效果 x3',
-    icon: '🚀'
+    icon: '🚀',
+    level: 5
   }
 ]);
