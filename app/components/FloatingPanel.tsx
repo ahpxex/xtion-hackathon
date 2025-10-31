@@ -39,6 +39,10 @@ export default function FloatingPanel({ defaultPosition }: FloatingPanelProps) {
 
   // 模拟随机弹出消息
   useEffect(() => {
+    if (!showFloatingPanel) {
+      return undefined;
+    }
+
     const messages = [
       { type: "info" as const, text: "系统运行正常" },
       { type: "success" as const, text: "数据同步成功" },
@@ -50,21 +54,26 @@ export default function FloatingPanel({ defaultPosition }: FloatingPanelProps) {
       { type: "info" as const, text: "收到新消息" },
     ];
 
-    const randomInterval = () => {
-      return Math.random() * 4000 + 2000; // 2-6秒之间随机
-    };
+    const randomInterval = () => Math.random() * 4000 + 2000; // 2-6秒之间随机
+
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    let isActive = true;
 
     const scheduleNextToast = () => {
-      const timer = setTimeout(() => {
+      timeoutId = setTimeout(() => {
+        if (!isActive) {
+          return;
+        }
+
         const randomMessage =
           messages[Math.floor(Math.random() * messages.length)];
 
-        setToasts((toasts) => {
+        setToasts((prevToasts) => {
           const id = `toast_${Date.now()}_${Math.random()
             .toString(36)
             .substr(2, 9)}`;
           return [
-            ...toasts,
+            ...prevToasts,
             {
               id,
               message: randomMessage.text,
@@ -76,14 +85,17 @@ export default function FloatingPanel({ defaultPosition }: FloatingPanelProps) {
 
         scheduleNextToast();
       }, randomInterval());
-
-      return timer;
     };
 
-    const timer = scheduleNextToast();
+    scheduleNextToast();
 
-    return () => clearTimeout(timer);
-  }, [setToasts]);
+    return () => {
+      isActive = false;
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [setToasts, showFloatingPanel]);
 
   // 监听 toast 数量变化，当有新 toast 时随机移动面板
   useEffect(() => {
