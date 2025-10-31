@@ -145,20 +145,6 @@ function handleBonusPurchase(context: PurchaseContext): void {
   console.log(`✅ 购买了: ${item.name}，item 已隐藏，网页标题和图标已更新`);
 }
 
-/**
- * 处理 'robot' 购买
- */
-function handleRobotPurchase(context: PurchaseContext): void {
-  const { item, setShopItems } = context;
-
-  // 设置网页标题和图标
-  setPageMetaByItemId(item.id);
-
-  // 购买后隐藏该 item
-  hideItem(item.id, setShopItems);
-
-  console.log(`✅ 购买了: ${item.name}，item 已隐藏，网页标题和图标已更新`);
-}
 
 /**
  * 处理 'stage-indicator' 购买（游戏进度表）

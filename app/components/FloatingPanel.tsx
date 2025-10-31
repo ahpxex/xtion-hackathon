@@ -29,6 +29,7 @@ export default function FloatingPanel({ defaultPosition }: FloatingPanelProps) {
 
   useEffect(() => {
     if (!defaultPosition) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPosition({
         x: window.innerWidth - 150,
         y: window.innerHeight - 150,
