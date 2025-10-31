@@ -14,6 +14,8 @@ export interface ShopItemData {
   level: number; // 物品等级，最低为 1
   repeatable: boolean; // 是否可以重复购买
   hidden?: boolean; // 是否隐藏（购买后）
+  currentLevel?: number; // 当前升级等级（用于可升级物品）
+  maxLevel?: number; // 最大升级等级（用于可升级物品）
 }
 
 interface ShopItemProps {
@@ -26,9 +28,11 @@ export default function ShopItem({ item, onPurchase }: ShopItemProps) {
   const [clickCount, setClickCount] = useAtom(clickCountAtom);
 
   const canAfford = clickCount >= item.price;
+  const isMaxLevel = item.maxLevel && item.currentLevel ? item.currentLevel >= item.maxLevel : false;
+  const canPurchase = canAfford && !isMaxLevel;
 
   const handlePurchase = () => {
-    if (canAfford) {
+    if (canPurchase) {
       setClickCount(prev => prev - item.price);
       if (onPurchase) {
         onPurchase(item);
@@ -44,16 +48,23 @@ export default function ShopItem({ item, onPurchase }: ShopItemProps) {
     >
       <button
         onClick={handlePurchase}
-        disabled={!canAfford}
+        disabled={!canPurchase}
         className={`
-          w-16 h-16 rounded-lg border-2 transition-all duration-200 flex items-center justify-center
-          ${canAfford
+          w-16 h-16 rounded-lg border-2 transition-all duration-200 flex items-center justify-center relative
+          ${canPurchase
             ? 'border-green-500 bg-green-50 hover:bg-green-100 hover:scale-110 cursor-pointer'
+            : isMaxLevel
+            ? 'border-blue-500 bg-blue-50 cursor-not-allowed opacity-80'
             : 'border-gray-300 bg-gray-100 cursor-not-allowed opacity-60'
           }
         `}
       >
         <span className="text-3xl">{item.icon}</span>
+        {item.currentLevel && item.maxLevel && (
+          <span className="absolute -top-1 -right-1 bg-purple-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+            {item.currentLevel}
+          </span>
+        )}
       </button>
 
       {isHovered && (
@@ -65,6 +76,15 @@ export default function ShopItem({ item, onPurchase }: ShopItemProps) {
               <span className="font-semibold">等级：</span>
               <span className="text-purple-600">Lv.{item.level}</span>
             </p>
+            {item.currentLevel !== undefined && item.maxLevel && (
+              <p className="text-sm">
+                <span className="font-semibold">升级进度：</span>
+                <span className={isMaxLevel ? 'text-blue-600 font-bold' : 'text-purple-600'}>
+                  {item.currentLevel}/{item.maxLevel}
+                  {isMaxLevel && ' (已满级)'}
+                </span>
+              </p>
+            )}
             <p className="text-sm">
               <span className="font-semibold">价格：</span>
               <span className={canAfford ? 'text-green-600' : 'text-red-600'}>

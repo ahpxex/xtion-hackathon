@@ -10,13 +10,17 @@ interface FaviconConfig {
 
 // 图标配置映射
 const faviconConfigs: Record<string, FaviconConfig> = {
-  cursor: {
-    title: '点击游戏 - 自动点击中',
-    emoji: '👆',
-  },
   multiplier: {
     title: '点击游戏 - 倍增模式',
     emoji: '✨',
+  },
+  penguin: {
+    title: '点击游戏 - 企鹅陪伴',
+    emoji: '🐧',
+  },
+  skeleton: {
+    title: '点击游戏 - 骷髅狂舞',
+    emoji: '💀',
   },
   factory: {
     title: '点击游戏 - 工厂运转中',

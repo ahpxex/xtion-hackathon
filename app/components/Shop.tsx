@@ -1,7 +1,14 @@
 'use client';
 
 import { useAtom } from 'jotai';
-import { clickCountAtom, shopItemsAtom, stageAtom } from '../store/atoms';
+import {
+  clickCountAtom,
+  shopItemsAtom,
+  stageAtom,
+  clickMultiplierAtom,
+  showPenguinAtom,
+  showSkeletonAtom
+} from '../store/atoms';
 import ShopItem, { ShopItemData } from './ShopItem';
 import { handleItemPurchase } from '../utils/purchaseHandler';
 
@@ -9,6 +16,9 @@ export default function Shop() {
   const [clickCount] = useAtom(clickCountAtom);
   const [shopItems, setShopItems] = useAtom(shopItemsAtom);
   const [stage, setStage] = useAtom(stageAtom);
+  const [, setClickMultiplier] = useAtom(clickMultiplierAtom);
+  const [, setShowPenguin] = useAtom(showPenguinAtom);
+  const [, setShowSkeleton] = useAtom(showSkeletonAtom);
 
   if (clickCount === 0) {
     return null;
@@ -20,6 +30,9 @@ export default function Shop() {
       item,
       setShopItems,
       setStage,
+      setClickMultiplier,
+      setShowPenguin,
+      setShowSkeleton,
     });
   };
 

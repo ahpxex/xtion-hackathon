@@ -17,8 +17,8 @@ export default function Home() {
       <Shop />
 
       {/* <FloatingPanel /> */}
-      {/* <PenguinDisplay /> */}
-      {/* <SkeletonDisplay /> */}
+      <PenguinDisplay />
+      <SkeletonDisplay />
 
 
     </div>

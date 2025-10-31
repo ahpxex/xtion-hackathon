@@ -2,7 +2,7 @@
 
 import { ButtonHTMLAttributes, useState } from 'react';
 import { useAtom } from 'jotai';
-import { clickCountAtom } from '../store/atoms';
+import { clickCountAtom, clickMultiplierAtom } from '../store/atoms';
 
 interface NativeButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode;
@@ -19,21 +19,24 @@ interface FloatingNumber {
 export default function NativeButton({ children, className = '', clickValue = 1, onClick, ...props }: NativeButtonProps) {
   const [floatingNumbers, setFloatingNumbers] = useState<FloatingNumber[]>([]);
   const [clickCount, setClickCount] = useAtom(clickCountAtom);
+  const [clickMultiplier] = useAtom(clickMultiplierAtom);
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
+    const actualValue = clickValue * clickMultiplier;
+
     const newNumber: FloatingNumber = {
       id: Date.now() + Math.random(),
-      value: clickValue,
+      value: actualValue,
       x,
       y
     };
 
     setFloatingNumbers(prev => [...prev, newNumber]);
-    setClickCount(prev => prev + clickValue);
+    setClickCount(prev => prev + actualValue);
 
     setTimeout(() => {
       setFloatingNumbers(prev => prev.filter(num => num.id !== newNumber.id));

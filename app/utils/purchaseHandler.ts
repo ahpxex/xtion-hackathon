@@ -13,6 +13,9 @@ export interface PurchaseContext {
   item: ShopItemData;
   setShopItems: (updater: (items: ShopItemData[]) => ShopItemData[]) => void;
   setStage?: (stage: number) => void;
+  setClickMultiplier?: (multiplier: number) => void;
+  setShowPenguin?: (show: boolean) => void;
+  setShowSkeleton?: (show: boolean) => void;
   // 可以添加更多上下文数据
 }
 
@@ -28,23 +31,80 @@ function hideItem(itemId: string, setShopItems: PurchaseContext['setShopItems'])
 }
 
 /**
- * 处理 'cursor' 购买
+ * 处理 'multiplier' 购买（点击倍增器升级）
  */
-function handleCursorPurchase(context: PurchaseContext): void {
-  const { item } = context;
-  console.log(`✅ 购买了: ${item.name}`);
-  // cursor 可以重复购买，不需要隐藏
-  // 可以添加其他逻辑，比如增加自动点击速度
+function handleMultiplierPurchase(context: PurchaseContext): void {
+  const { item, setShopItems, setClickMultiplier } = context;
+
+  const currentLevel = item.currentLevel || 1;
+  const maxLevel = item.maxLevel || 5;
+
+  if (currentLevel < maxLevel) {
+    const newLevel = currentLevel + 1;
+
+    // 更新倍数
+    if (setClickMultiplier) {
+      setClickMultiplier(newLevel);
+    }
+
+    // 更新 item 的等级和价格
+    setShopItems((items) =>
+      items.map((i) =>
+        i.id === 'multiplier'
+          ? {
+              ...i,
+              currentLevel: newLevel,
+              price: 50 * newLevel, // 价格递增：50, 100, 150, 200, 250
+              effect: `点击 +${newLevel}`
+            }
+          : i
+      )
+    );
+
+    console.log(`✅ 购买了: ${item.name}，当前等级: ${newLevel}/${maxLevel}`);
+  } else {
+    console.log(`⚠️ ${item.name} 已达到最大等级`);
+  }
 }
 
 /**
- * 处理 'multiplier' 购买
+ * 处理 'penguin' 购买
  */
-function handleMultiplierPurchase(context: PurchaseContext): void {
-  const { item } = context;
-  console.log(`✅ 购买了: ${item.name}`);
-  // multiplier 可以重复购买
-  // 可以添加倍增效果的逻辑
+function handlePenguinPurchase(context: PurchaseContext): void {
+  const { item, setShopItems, setShowPenguin } = context;
+
+  // 显示企鹅
+  if (setShowPenguin) {
+    setShowPenguin(true);
+  }
+
+  // 设置网页标题和图标
+  setPageMetaByItemId(item.id);
+
+  // 购买后隐藏该 item
+  hideItem(item.id, setShopItems);
+
+  console.log(`✅ 购买了: ${item.name}，企鹅已显示`);
+}
+
+/**
+ * 处理 'skeleton' 购买
+ */
+function handleSkeletonPurchase(context: PurchaseContext): void {
+  const { item, setShopItems, setShowSkeleton } = context;
+
+  // 显示骷髅
+  if (setShowSkeleton) {
+    setShowSkeleton(true);
+  }
+
+  // 设置网页标题和图标
+  setPageMetaByItemId(item.id);
+
+  // 购买后隐藏该 item
+  hideItem(item.id, setShopItems);
+
+  console.log(`✅ 购买了: ${item.name}，骷髅已显示`);
 }
 
 /**
@@ -111,8 +171,9 @@ function handleRocketPurchase(context: PurchaseContext): void {
  * 购买行为处理器映射
  */
 const purchaseHandlers: Record<string, (context: PurchaseContext) => void> = {
-  cursor: handleCursorPurchase,
   multiplier: handleMultiplierPurchase,
+  penguin: handlePenguinPurchase,
+  skeleton: handleSkeletonPurchase,
   factory: handleFactoryPurchase,
   bonus: handleBonusPurchase,
   robot: handleRobotPurchase,
