@@ -6,8 +6,8 @@ import {
   shopItemsAtom,
   stageAtom,
   clickMultiplierAtom,
-  showPenguinAtom,
-  showSkeletonAtom,
+  penguinLevelAtom,
+  skeletonLevelAtom,
   showStageIndicatorAtom,
   showFloatingPanelAtom,
   showLeaderboardAtom,
@@ -24,8 +24,8 @@ export default function Shop() {
   const [shopItems, setShopItems] = useAtom(shopItemsAtom);
   const [stage, setStage] = useAtom(stageAtom);
   const [, setClickMultiplier] = useAtom(clickMultiplierAtom);
-  const [, setShowPenguin] = useAtom(showPenguinAtom);
-  const [, setShowSkeleton] = useAtom(showSkeletonAtom);
+  const [, setPenguinLevel] = useAtom(penguinLevelAtom);
+  const [, setSkeletonLevel] = useAtom(skeletonLevelAtom);
   const [, setShowStageIndicator] = useAtom(showStageIndicatorAtom);
   const [, setShowFloatingPanel] = useAtom(showFloatingPanelAtom);
   const [, setShowLeaderboard] = useAtom(showLeaderboardAtom);
@@ -45,8 +45,8 @@ export default function Shop() {
       setShopItems,
       setStage,
       setClickMultiplier,
-      setShowPenguin,
-      setShowSkeleton,
+      setPenguinLevel,
+      setSkeletonLevel,
       setShowStageIndicator,
       setShowFloatingPanel,
       setShowLeaderboard,

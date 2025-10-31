@@ -25,8 +25,8 @@ export const stageAtom = atom(0); // 游戏阶段，等于用户总共产生的�
 
 export const clickMultiplierAtom = atom(1); // 点击倍数，默认为1
 
-export const showPenguinAtom = atom(false); // 是否显示企鹅
-export const showSkeletonAtom = atom(false); // 是否显示骷髅
+export const penguinLevelAtom = atom(0); // 企鹅展示等级
+export const skeletonLevelAtom = atom(0); // 骷髅展示等级
 
 export const showStageIndicatorAtom = atom(false); // 是否显示游戏进度表
 export const showFloatingPanelAtom = atom(false); // 是否显示 AI 功能
@@ -124,23 +124,27 @@ export const shopItemsAtom = atom<ShopItemData[]>([
   {
     id: 'penguin',
     name: '企鹅',
-    description: '解锁可爱的企鹅动画',
+    description: '解锁并扩建企鹅护照阵列',
     price: 400,
-    effect: '显示企鹅',
+    effect: '企鹅数量 x0',
     icon: '🐧',
     level: 3,
-    repeatable: false,
+    repeatable: true,
+    currentLevel: 0,
+    maxLevel: 5,
     stageThreshold: 300
   },
   {
     id: 'skeleton',
     name: '骷髅',
-    description: '解锁跳舞的骷髅动画',
+    description: '举办更盛大的骷髅舞会',
     price: 500,
-    effect: '显示骷髅',
+    effect: '骷髅数量 x0',
     icon: '💀',
     level: 3,
-    repeatable: false,
+    repeatable: true,
+    currentLevel: 0,
+    maxLevel: 5,
     stageThreshold: 300
   },
   {
