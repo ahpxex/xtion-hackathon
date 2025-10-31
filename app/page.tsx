@@ -4,6 +4,7 @@ import Shop from "./components/Shop";
 import FloatingPanel from "./components/FloatingPanel";
 import StageIndicator from "./components/StageIndicator";
 import PenguinDisplay from "./components/PenguinDisplay";
+import SkeletonDisplay from "./components/SkeletonDisplay";
 
 export default function Home() {
   return (
@@ -15,6 +16,9 @@ export default function Home() {
 
       {/* <FloatingPanel /> */}
       {/* <PenguinDisplay /> */}
+      {/* <SkeletonDisplay /> */}
+
+
     </div>
   );
 }
