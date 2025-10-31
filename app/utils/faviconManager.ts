@@ -50,6 +50,10 @@ const faviconConfigs: Record<string, FaviconConfig> = {
     title: '点击游戏 - 排行榜热区',
     emoji: '🏆',
   },
+  'leaderboard-upgrade': {
+    title: '点击游戏 - 冲榜模式',
+    emoji: '📣',
+  },
   rocket: {
     title: '点击游戏 - 火箭加速',
     emoji: '🚀',

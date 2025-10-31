@@ -23,6 +23,9 @@ export interface PurchaseContext {
   setFactoryLevel?: (level: number) => void;
   setBonusLevel?: (level: number) => void;
   setDisplayUpgradeLevel?: (level: number) => void;
+  setLeaderboardStyleLevel?: (level: number) => void;
+  setLeaderboardBoostUntil?: (timestamp: number) => void;
+  setLeaderboardComedownUntil?: (timestamp: number) => void;
   // 可以添加更多上下文数据
 }
 
@@ -384,6 +387,69 @@ function handleLeaderboardPurchase(context: PurchaseContext): void {
 }
 
 /**
+ * 处理 'leaderboard-upgrade' 购买（排行榜增强特效）
+ */
+function handleLeaderboardUpgradePurchase(context: PurchaseContext): void {
+  const {
+    item,
+    setShopItems,
+    setLeaderboardStyleLevel,
+    setLeaderboardBoostUntil,
+    setLeaderboardComedownUntil,
+  } = context;
+
+  const currentLevel = item.currentLevel ?? 0;
+  const maxLevel = item.maxLevel ?? 5;
+
+  if (currentLevel >= maxLevel) {
+    console.log(`⚠️ ${item.name} 已达到最大等级`);
+    return;
+  }
+
+  const newLevel = currentLevel + 1;
+  const now = Date.now();
+  const boostDuration = 6000 + newLevel * 900;
+  const comedownDuration = boostDuration + 4500;
+
+  if (setLeaderboardStyleLevel) {
+    setLeaderboardStyleLevel(newLevel);
+  }
+
+  if (setLeaderboardBoostUntil) {
+    setLeaderboardBoostUntil(now + boostDuration);
+  }
+
+  if (setLeaderboardComedownUntil) {
+    setLeaderboardComedownUntil(now + comedownDuration);
+  }
+
+  setShopItems((items) =>
+    items.map((i) => {
+      if (i.id !== "leaderboard-upgrade") return i;
+
+      const updatedLevel = Math.min((i.currentLevel ?? 0) + 1, maxLevel);
+      const isMax = updatedLevel >= maxLevel;
+
+      return {
+        ...i,
+        currentLevel: updatedLevel,
+        price: isMax ? i.price : 260 + updatedLevel * 210,
+        effect: `炫酷度 Lv.${updatedLevel}`,
+        hidden: isMax,
+      };
+    })
+  );
+
+  setPageMetaByItemId(item.id);
+
+  if (newLevel >= maxLevel) {
+    console.log(`🎉 ${item.name} 已达到最大等级并隐藏`);
+  } else {
+    console.log(`✅ 购买了: ${item.name}，当前等级: ${newLevel}/${maxLevel}`);
+  }
+}
+
+/**
  * 处理 'rocket' 购买
  */
 function handleRocketPurchase(context: PurchaseContext): void {
@@ -412,6 +478,7 @@ const purchaseHandlers: Record<string, (context: PurchaseContext) => void> = {
   "button-upgrade": handleButtonUpgradePurchase,
   "display-upgrade": handleDisplayUpgradePurchase,
   leaderboard: handleLeaderboardPurchase,
+  "leaderboard-upgrade": handleLeaderboardUpgradePurchase,
   rocket: handleRocketPurchase,
 };
 

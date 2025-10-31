@@ -35,13 +35,17 @@ export const fancyButtonAtom = atom(false); // 是否启用炫酷按钮
 export const factoryLevelAtom = atom(0); // 点数工厂等级
 export const bonusLevelAtom = atom(0); // 幸运硬币等级
 export const displayUpgradeLevelAtom = atom(0); // 点数显示器升级等级
+export const leaderboardStyleLevelAtom = atom(0); // 排行榜炫酷等级
+export const leaderboardBoostUntilAtom = atom(0); // 排名临时上升截止时间戳
+export const leaderboardComedownUntilAtom = atom(0); // 排名回落截止时间戳
 
 export const leaderboardAtom = atom<LeaderboardEntry[]>([
   { id: '1', rank: 1, name: '孙笑川258', points: 1280, trend: 'steady', delta: 0 },
   { id: '2', rank: 2, name: '张伟Beta', points: 1175, trend: 'steady', delta: 0 },
-  { id: '3', rank: 3, name: '暴走系数', points: 980, trend: 'steady', delta: 0 },
-  { id: '4', rank: 4, name: 'QiangG', points: 755, trend: 'steady', delta: 0 },
-  { id: '5', rank: 5, name: '一号线末班', points: 640, trend: 'steady', delta: 0 },
+  { id: 'player', rank: 3, name: '你·阿尔法', points: 945, trend: 'steady', delta: 0 },
+  { id: '3', rank: 4, name: '暴走系数', points: 930, trend: 'steady', delta: 0 },
+  { id: '4', rank: 5, name: 'QiangG', points: 755, trend: 'steady', delta: 0 },
+  { id: '5', rank: 6, name: '一号线末班', points: 640, trend: 'steady', delta: 0 },
 ]);
 
 export const toastsAtom = atom<ToastData[]>([]);
@@ -108,6 +112,19 @@ export const shopItemsAtom = atom<ShopItemData[]>([
     icon: '🏆',
     level: 3,
     repeatable: false,
+    stageThreshold: 250
+  },
+  {
+    id: 'leaderboard-upgrade',
+    name: '榜单声光包',
+    description: '让排行榜更炸裂并暂时冲上头名',
+    price: 260,
+    effect: '炫酷度 Lv.0',
+    icon: '📣',
+    level: 3,
+    repeatable: true,
+    currentLevel: 0,
+    maxLevel: 5,
     stageThreshold: 250
   },
   {

@@ -14,7 +14,10 @@ import {
   fancyButtonAtom,
   factoryLevelAtom,
   bonusLevelAtom,
-  displayUpgradeLevelAtom
+  displayUpgradeLevelAtom,
+  leaderboardStyleLevelAtom,
+  leaderboardBoostUntilAtom,
+  leaderboardComedownUntilAtom
 } from '../store/atoms';
 import ShopItem, { ShopItemData } from './ShopItem';
 import { handleItemPurchase } from '../utils/purchaseHandler';
@@ -33,6 +36,9 @@ export default function Shop() {
   const [, setFactoryLevel] = useAtom(factoryLevelAtom);
   const [, setBonusLevel] = useAtom(bonusLevelAtom);
   const [, setDisplayUpgradeLevel] = useAtom(displayUpgradeLevelAtom);
+  const [, setLeaderboardStyleLevel] = useAtom(leaderboardStyleLevelAtom);
+  const [, setLeaderboardBoostUntil] = useAtom(leaderboardBoostUntilAtom);
+  const [, setLeaderboardComedownUntil] = useAtom(leaderboardComedownUntilAtom);
 
   if (clickCount === 0) {
     return null;
@@ -54,6 +60,9 @@ export default function Shop() {
       setFactoryLevel,
       setBonusLevel,
       setDisplayUpgradeLevel,
+      setLeaderboardStyleLevel,
+      setLeaderboardBoostUntil,
+      setLeaderboardComedownUntil,
     });
   };
 
