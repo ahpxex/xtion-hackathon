@@ -1,7 +1,16 @@
 import { atom } from 'jotai';
 import { ShopItemData } from '../components/ShopItem';
 
+export interface ToastData {
+  id: string;
+  message: string;
+  type: 'info' | 'success' | 'warning' | 'error';
+  duration?: number; // 显示时长（毫秒），默认 3000
+}
+
 export const clickCountAtom = atom(0);
+
+export const toastsAtom = atom<ToastData[]>([]);
 
 export const shopItemsAtom = atom<ShopItemData[]>([
   {
