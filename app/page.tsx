@@ -5,11 +5,13 @@ import FloatingPanel from "./components/FloatingPanel";
 import StageIndicator from "./components/StageIndicator";
 import PenguinDisplay from "./components/PenguinDisplay";
 import SkeletonDisplay from "./components/SkeletonDisplay";
+import DevTools from "./components/DevTools";
 
 export default function Home() {
   return (
     <div className="min-h-screen flex flex-col gap-6 justify-center items-center py-8">
       {/* <StageIndicator /> */}
+      <DevTools />
       <CreditDisplay size="sm" />
       <NativeButton clickValue={1}>Native Button</NativeButton>
       <Shop />
