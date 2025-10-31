@@ -1,17 +1,58 @@
-import { ButtonHTMLAttributes } from 'react';
+'use client';
+
+import { ButtonHTMLAttributes, useState } from 'react';
+import { useAtom } from 'jotai';
+import { clickCountAtom } from '../store/atoms';
 
 interface FancyButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode;
   variant?: 'primary' | 'secondary' | 'accent';
+  clickValue?: number;
+}
+
+interface FloatingNumber {
+  id: number;
+  value: number;
+  x: number;
+  y: number;
 }
 
 export default function FancyButton({
   children,
   className = '',
   variant = 'primary',
+  clickValue = 1,
+  onClick,
   ...props
 }: FancyButtonProps) {
-  const baseClasses = "px-6 py-3 rounded-lg font-semibold text-sm transition-all duration-300 ease-out transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl";
+  const [floatingNumbers, setFloatingNumbers] = useState<FloatingNumber[]>([]);
+  const [clickCount, setClickCount] = useAtom(clickCountAtom);
+
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    const newNumber: FloatingNumber = {
+      id: Date.now() + Math.random(),
+      value: clickValue,
+      x,
+      y
+    };
+
+    setFloatingNumbers(prev => [...prev, newNumber]);
+    setClickCount(prev => prev + clickValue);
+
+    setTimeout(() => {
+      setFloatingNumbers(prev => prev.filter(num => num.id !== newNumber.id));
+    }, 1000);
+
+    if (onClick) {
+      onClick(e);
+    }
+  };
+
+  const baseClasses = "px-6 py-3 rounded-lg font-semibold text-sm transition-all duration-300 ease-out transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl relative overflow-visible";
 
   const variantClasses = {
     primary: "bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 hover:-translate-y-0.5",
@@ -22,8 +63,20 @@ export default function FancyButton({
   const combinedClasses = `${baseClasses} ${variantClasses[variant]} ${className}`;
 
   return (
-    <button className={combinedClasses} {...props}>
+    <button className={combinedClasses} onClick={handleClick} {...props}>
       <span className="relative z-10">{children}</span>
+      {floatingNumbers.map(num => (
+        <span
+          key={num.id}
+          className="absolute pointer-events-none font-bold text-yellow-300 text-xl animate-float-up z-20"
+          style={{
+            left: `${num.x}px`,
+            top: `${num.y}px`,
+          }}
+        >
+          +{num.value}
+        </span>
+      ))}
     </button>
   );
 }
