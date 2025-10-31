@@ -36,7 +36,7 @@ export const shopItemsAtom = atom<ShopItemData[]>([
     repeatable: true,
     currentLevel: 1,
     maxLevel: 5,
-    stageThreshold: 50
+    stageThreshold: 5
   },
   {
     id: 'factory',
