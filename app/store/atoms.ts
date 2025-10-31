@@ -10,7 +10,7 @@ export interface ToastData {
 
 export const clickCountAtom = atom(0);
 
-export const stageAtom = atom(0); // 游戏阶段 0-100
+export const stageAtom = atom(0); // 游戏阶段 0-1000
 
 export const toastsAtom = atom<ToastData[]>([]);
 

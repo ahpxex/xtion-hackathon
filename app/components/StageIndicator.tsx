@@ -7,24 +7,24 @@ export default function StageIndicator() {
   const [stage] = useAtom(stageAtom);
 
   // 计算进度百分比
-  const progress = (stage / 100) * 100;
+  const progress = (stage / 1000) * 100;
 
   // 根据阶段显示不同的颜色
   const getStageColor = () => {
     if (stage === 0) return 'text-gray-500';
-    if (stage < 25) return 'text-green-600';
-    if (stage < 50) return 'text-blue-600';
-    if (stage < 75) return 'text-purple-600';
+    if (stage < 250) return 'text-green-600';
+    if (stage < 500) return 'text-blue-600';
+    if (stage < 750) return 'text-purple-600';
     return 'text-red-600';
   };
 
   // 根据阶段显示不同的状态文字
   const getStageText = () => {
     if (stage === 0) return '游戏未开始';
-    if (stage < 25) return '初级阶段';
-    if (stage < 50) return '进阶阶段';
-    if (stage < 75) return '高级阶段';
-    if (stage < 100) return '终极阶段';
+    if (stage < 250) return '初级阶段';
+    if (stage < 500) return '进阶阶段';
+    if (stage < 750) return '高级阶段';
+    if (stage < 1000) return '终极阶段';
     return '游戏完成';
   };
 
@@ -39,7 +39,7 @@ export default function StageIndicator() {
             <span className={`font-bold text-2xl ${getStageColor()}`}>
               {stage}
             </span>
-            <span className="text-gray-400 text-sm">/100</span>
+            <span className="text-gray-400 text-sm">/1000</span>
           </div>
           <span className={`text-sm font-semibold ${getStageColor()}`}>
             {getStageText()}
@@ -52,11 +52,11 @@ export default function StageIndicator() {
             className={`h-full rounded-full transition-all duration-500 ease-out ${
               stage === 0
                 ? 'bg-gray-400'
-                : stage < 25
+                : stage < 250
                 ? 'bg-gradient-to-r from-green-400 to-green-600'
-                : stage < 50
+                : stage < 500
                 ? 'bg-gradient-to-r from-blue-400 to-blue-600'
-                : stage < 75
+                : stage < 750
                 ? 'bg-gradient-to-r from-purple-400 to-purple-600'
                 : 'bg-gradient-to-r from-red-400 to-red-600'
             }`}
