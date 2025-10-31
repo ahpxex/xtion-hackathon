@@ -1,15 +1,12 @@
 'use client';
 
 import { useAtom } from 'jotai';
-import { clickCountAtom } from '../store/atoms';
+import { clickCountAtom, shopItemsAtom } from '../store/atoms';
 import ShopItem, { ShopItemData } from './ShopItem';
 
-interface ShopProps {
-  items: ShopItemData[];
-}
-
-export default function Shop({ items }: ShopProps) {
+export default function Shop() {
   const [clickCount] = useAtom(clickCountAtom);
+  const [shopItems] = useAtom(shopItemsAtom);
 
   if (clickCount === 0) {
     return null;
@@ -21,7 +18,7 @@ export default function Shop({ items }: ShopProps) {
 
   return (
     <div className="flex flex-wrap gap-4 justify-center">
-      {items.map(item => (
+      {shopItems.map(item => (
         <ShopItem
           key={item.id}
           item={item}

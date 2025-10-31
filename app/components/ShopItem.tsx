@@ -43,14 +43,14 @@ export default function ShopItem({ item, onPurchase }: ShopItemProps) {
         onClick={handlePurchase}
         disabled={!canAfford}
         className={`
-          w-24 h-24 rounded-lg border-2 transition-all duration-200 flex items-center justify-center
+          w-16 h-16 rounded-lg border-2 transition-all duration-200 flex items-center justify-center
           ${canAfford
             ? 'border-green-500 bg-green-50 hover:bg-green-100 hover:scale-110 cursor-pointer'
             : 'border-gray-300 bg-gray-100 cursor-not-allowed opacity-60'
           }
         `}
       >
-        <span className="text-5xl">{item.icon}</span>
+        <span className="text-3xl">{item.icon}</span>
       </button>
 
       {isHovered && (
