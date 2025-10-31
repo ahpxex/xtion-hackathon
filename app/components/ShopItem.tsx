@@ -12,6 +12,8 @@ export interface ShopItemData {
   effect: string;
   icon: string;
   level: number; // 物品等级，最低为 1
+  repeatable: boolean; // 是否可以重复购买
+  hidden?: boolean; // 是否隐藏（购买后）
 }
 
 interface ShopItemProps {

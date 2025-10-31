@@ -22,7 +22,8 @@ export const shopItemsAtom = atom<ShopItemData[]>([
     price: 10,
     effect: '+1 点数/秒',
     icon: '👆',
-    level: 1
+    level: 1,
+    repeatable: true
   },
   {
     id: 'multiplier',
@@ -31,7 +32,8 @@ export const shopItemsAtom = atom<ShopItemData[]>([
     price: 50,
     effect: '点击效果 x2',
     icon: '✨',
-    level: 2
+    level: 2,
+    repeatable: true
   },
   {
     id: 'factory',
@@ -40,7 +42,8 @@ export const shopItemsAtom = atom<ShopItemData[]>([
     price: 100,
     effect: '+5 点数/秒',
     icon: '🏭',
-    level: 3
+    level: 3,
+    repeatable: false
   },
   {
     id: 'bonus',
@@ -49,7 +52,8 @@ export const shopItemsAtom = atom<ShopItemData[]>([
     price: 75,
     effect: '10% 获得双倍点数',
     icon: '🪙',
-    level: 2
+    level: 2,
+    repeatable: false
   },
   {
     id: 'robot',
@@ -58,7 +62,8 @@ export const shopItemsAtom = atom<ShopItemData[]>([
     price: 200,
     effect: '+10 点数/秒',
     icon: '🤖',
-    level: 4
+    level: 4,
+    repeatable: false
   },
   {
     id: 'rocket',
@@ -67,6 +72,7 @@ export const shopItemsAtom = atom<ShopItemData[]>([
     price: 500,
     effect: '所有效果 x3',
     icon: '🚀',
-    level: 5
+    level: 5,
+    repeatable: false
   }
 ]);
