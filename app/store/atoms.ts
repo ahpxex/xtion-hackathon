@@ -32,6 +32,8 @@ export const showStageIndicatorAtom = atom(false); // 是否显示游戏进度�
 export const showFloatingPanelAtom = atom(false); // 是否显示 AI 功能
 export const showLeaderboardAtom = atom(false); // 是否显示排行榜
 export const fancyButtonAtom = atom(false); // 是否启用炫酷按钮
+export const factoryLevelAtom = atom(0); // 点数工厂等级
+export const bonusLevelAtom = atom(0); // 幸运硬币等级
 
 export const leaderboardAtom = atom<LeaderboardEntry[]>([
   { id: '1', rank: 1, name: '孙笑川258', points: 1280, trend: 'steady', delta: 0 },
@@ -62,10 +64,12 @@ export const shopItemsAtom = atom<ShopItemData[]>([
     name: '点数工厂',
     description: '大幅提升自动生产效率',
     price: 200,
-    effect: '+5 点数/秒',
+    effect: '每秒 +0',
     icon: '🏭',
     level: 2,
-    repeatable: false,
+    repeatable: true,
+    currentLevel: 0,
+    maxLevel: 10,
     stageThreshold: 200
   },
   {
@@ -73,10 +77,12 @@ export const shopItemsAtom = atom<ShopItemData[]>([
     name: '幸运硬币',
     description: '点击时有机会获得额外点数',
     price: 250,
-    effect: '10% 获得双倍点数',
+    effect: '双倍概率 0%',
     icon: '🪙',
     level: 2,
-    repeatable: false,
+    repeatable: true,
+    currentLevel: 0,
+    maxLevel: 10,
     stageThreshold: 200
   },
   {

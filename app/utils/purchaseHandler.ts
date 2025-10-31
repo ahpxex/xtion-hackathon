@@ -20,6 +20,8 @@ export interface PurchaseContext {
   setShowFloatingPanel?: (show: boolean) => void;
   setShowLeaderboard?: (show: boolean) => void;
   setFancyButton?: (enabled: boolean) => void;
+  setFactoryLevel?: (level: number) => void;
+  setBonusLevel?: (level: number) => void;
   // 可以添加更多上下文数据
 }
 
@@ -121,30 +123,93 @@ function handleSkeletonPurchase(context: PurchaseContext): void {
  * 处理 'factory' 购买
  */
 function handleFactoryPurchase(context: PurchaseContext): void {
-  const { item, setShopItems } = context;
+  const { item, setShopItems, setFactoryLevel } = context;
+  const currentLevel = item.currentLevel ?? 0;
+  const maxLevel = item.maxLevel ?? 10;
 
-  // 设置网页标题和图标
+  if (currentLevel >= maxLevel) {
+    console.log(`⚠️ ${item.name} 已达到最大等级`);
+    return;
+  }
+
+  const newLevel = currentLevel + 1;
+  const incomePerLevel = 25;
+
+  if (setFactoryLevel) {
+    setFactoryLevel(newLevel);
+  }
+
+  setShopItems((items) =>
+    items.map((i) => {
+      if (i.id !== 'factory') return i;
+
+      const updatedLevel = Math.min((i.currentLevel ?? 0) + 1, maxLevel);
+      const isMax = updatedLevel >= maxLevel;
+
+      return {
+        ...i,
+        currentLevel: updatedLevel,
+        price: isMax ? i.price : 200 + updatedLevel * 150,
+        effect: `每秒 +${updatedLevel * incomePerLevel}`,
+        hidden: isMax,
+      };
+    })
+  );
+
   setPageMetaByItemId(item.id);
 
-  // 购买后隐藏该 item
-  hideItem(item.id, setShopItems);
-
-  console.log(`✅ 购买了: ${item.name}，item 已隐藏，网页标题和图标已更新`);
+  if (newLevel >= maxLevel) {
+    console.log(`🎉 ${item.name} 已达到最大等级并隐藏`);
+  } else {
+    console.log(`✅ 购买了: ${item.name}，当前等级: ${newLevel}/${maxLevel}`);
+  }
 }
 
 /**
  * 处理 'bonus' 购买
  */
 function handleBonusPurchase(context: PurchaseContext): void {
-  const { item, setShopItems } = context;
+  const { item, setShopItems, setBonusLevel } = context;
+  const currentLevel = item.currentLevel ?? 0;
+  const maxLevel = item.maxLevel ?? 10;
 
-  // 设置网页标题和图标
+  if (currentLevel >= maxLevel) {
+    console.log(`⚠️ ${item.name} 已达到最大等级`);
+    return;
+  }
+
+  const newLevel = currentLevel + 1;
+  const chancePerLevel = 10;
+
+  if (setBonusLevel) {
+    setBonusLevel(newLevel);
+  }
+
+  setShopItems((items) =>
+    items.map((i) => {
+      if (i.id !== 'bonus') return i;
+
+      const updatedLevel = Math.min((i.currentLevel ?? 0) + 1, maxLevel);
+      const isMax = updatedLevel >= maxLevel;
+      const chance = Math.min(updatedLevel * chancePerLevel, 100);
+
+      return {
+        ...i,
+        currentLevel: updatedLevel,
+        price: isMax ? i.price : 250 + updatedLevel * 125,
+        effect: `双倍概率 ${chance}%`,
+        hidden: isMax,
+      };
+    })
+  );
+
   setPageMetaByItemId(item.id);
 
-  // 购买后隐藏该 item
-  hideItem(item.id, setShopItems);
-
-  console.log(`✅ 购买了: ${item.name}，item 已隐藏，网页标题和图标已更新`);
+  if (newLevel >= maxLevel) {
+    console.log(`🎉 ${item.name} 已达到最大等级并隐藏`);
+  } else {
+    console.log(`✅ 购买了: ${item.name}，当前等级: ${newLevel}/${maxLevel}`);
+  }
 }
 
 

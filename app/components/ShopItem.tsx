@@ -29,7 +29,9 @@ export default function ShopItem({ item, onPurchase }: ShopItemProps) {
   const [clickCount, setClickCount] = useAtom(clickCountAtom);
 
   const canAfford = clickCount >= item.price;
-  const isMaxLevel = item.maxLevel && item.currentLevel ? item.currentLevel >= item.maxLevel : false;
+  const isMaxLevel = item.maxLevel && typeof item.currentLevel === 'number'
+    ? item.currentLevel >= item.maxLevel
+    : false;
   const canPurchase = canAfford && !isMaxLevel;
 
   const handlePurchase = () => {
@@ -61,7 +63,7 @@ export default function ShopItem({ item, onPurchase }: ShopItemProps) {
         `}
       >
         <span className="text-3xl">{item.icon}</span>
-        {item.currentLevel && item.maxLevel && (
+        {typeof item.currentLevel === 'number' && item.maxLevel && item.currentLevel > 0 && (
           <span className="absolute -top-1 -right-1 bg-purple-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
             {item.currentLevel}
           </span>

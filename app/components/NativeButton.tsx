@@ -2,7 +2,7 @@
 
 import { ButtonHTMLAttributes, useState } from 'react';
 import { useAtom } from 'jotai';
-import { clickCountAtom, clickMultiplierAtom, clicksAtom, stageAtom, fancyButtonAtom } from '../store/atoms';
+import { clickCountAtom, clickMultiplierAtom, clicksAtom, stageAtom, fancyButtonAtom, bonusLevelAtom } from '../store/atoms';
 
 interface NativeButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode;
@@ -14,6 +14,7 @@ interface FloatingNumber {
   value: number;
   x: number;
   y: number;
+  isBonus?: boolean;
 }
 
 export default function NativeButton({ children, className = '', clickValue = 1, onClick, ...props }: NativeButtonProps) {
@@ -23,25 +24,30 @@ export default function NativeButton({ children, className = '', clickValue = 1,
   const [, setClicks] = useAtom(clicksAtom);
   const [, setStage] = useAtom(stageAtom);
   const [isFancyButton] = useAtom(fancyButtonAtom);
+  const [bonusLevel] = useAtom(bonusLevelAtom);
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    const actualValue = clickValue * clickMultiplier;
+    const baseValue = clickValue * clickMultiplier;
+    const bonusChance = Math.min(bonusLevel * 0.1, 1);
+    const isBonus = bonusLevel > 0 && Math.random() < bonusChance;
+    const totalValue = isBonus ? baseValue * 2 : baseValue;
 
     const newNumber: FloatingNumber = {
       id: Date.now() + Math.random(),
-      value: actualValue,
+      value: totalValue,
       x,
-      y
+      y,
+      isBonus,
     };
 
     setFloatingNumbers(prev => [...prev, newNumber]);
-    setClickCount(prev => prev + actualValue);
+    setClickCount(prev => prev + totalValue);
     setClicks(prev => prev + 1); // 点击次数 +1
-    setStage(prev => prev + actualValue); // stage 增加实际产生的点数
+    setStage(prev => prev + totalValue); // stage 增加实际产生的点数
 
     setTimeout(() => {
       setFloatingNumbers(prev => prev.filter(num => num.id !== newNumber.id));
@@ -82,7 +88,13 @@ export default function NativeButton({ children, className = '', clickValue = 1,
       {floatingNumbers.map(num => (
         <span
           key={num.id}
-          className={floatingNumberClass}
+          className={`${floatingNumberClass} ${
+            num.isBonus
+              ? isFancyButton
+                ? 'text-yellow-200'
+                : 'text-amber-500'
+              : ''
+          }`}
           style={{
             left: `${num.x}px`,
             top: `${num.y}px`,
