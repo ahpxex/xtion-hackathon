@@ -42,6 +42,10 @@ const faviconConfigs: Record<string, FaviconConfig> = {
     title: '点击游戏 - 彩虹按钮上线',
     emoji: '🌈',
   },
+  'display-upgrade': {
+    title: '点击游戏 - 点数显示器升级',
+    emoji: '📺',
+  },
   leaderboard: {
     title: '点击游戏 - 排行榜热区',
     emoji: '🏆',

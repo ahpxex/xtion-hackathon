@@ -34,6 +34,7 @@ export const showLeaderboardAtom = atom(false); // 是否显示排行榜
 export const fancyButtonAtom = atom(false); // 是否启用炫酷按钮
 export const factoryLevelAtom = atom(0); // 点数工厂等级
 export const bonusLevelAtom = atom(0); // 幸运硬币等级
+export const displayUpgradeLevelAtom = atom(0); // 点数显示器升级等级
 
 export const leaderboardAtom = atom<LeaderboardEntry[]>([
   { id: '1', rank: 1, name: '孙笑川258', points: 1280, trend: 'steady', delta: 0 },
@@ -84,6 +85,19 @@ export const shopItemsAtom = atom<ShopItemData[]>([
     currentLevel: 0,
     maxLevel: 10,
     stageThreshold: 200
+  },
+  {
+    id: 'display-upgrade',
+    name: '显示器焕新',
+    description: '升级点数显示器的视觉表现',
+    price: 180,
+    effect: '字体 +0%',
+    icon: '📺',
+    level: 2,
+    repeatable: true,
+    currentLevel: 0,
+    maxLevel: 5,
+    stageThreshold: 150
   },
   {
     id: 'leaderboard',

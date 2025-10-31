@@ -78,3 +78,55 @@ body {
 .animate-rainbow {
   animation: rainbow-shift 4.5s ease-in-out infinite;
 }
+
+@keyframes gradient-pan-slow {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-gradient-slow {
+  background-size: 200% 200%;
+  animation: gradient-pan-slow 6s ease-in-out infinite;
+}
+
+@keyframes hue-bounce {
+  0% {
+    filter: hue-rotate(0deg) saturate(1);
+  }
+  50% {
+    filter: hue-rotate(45deg) saturate(1.2);
+  }
+  100% {
+    filter: hue-rotate(0deg) saturate(1);
+  }
+}
+
+.animate-hue-bounce {
+  animation: hue-bounce 5s ease-in-out infinite;
+}
+
+@keyframes sparkle {
+  0% {
+    opacity: 0.4;
+    transform: translateY(0) scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-4px) scale(1.05);
+  }
+  100% {
+    opacity: 0.4;
+    transform: translateY(0) scale(0.8);
+  }
+}
+
+.animate-sparkle {
+  animation: sparkle 2.8s ease-in-out infinite;
+}

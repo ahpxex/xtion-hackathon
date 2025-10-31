@@ -3,8 +3,8 @@
  * 统一管理所有 item 的购买后行为
  */
 
-import { ShopItemData } from '../components/ShopItem';
-import { setPageMetaByItemId } from './faviconManager';
+import { ShopItemData } from "../components/ShopItem";
+import { setPageMetaByItemId } from "./faviconManager";
 
 /**
  * 购买行为的上下文
@@ -22,17 +22,19 @@ export interface PurchaseContext {
   setFancyButton?: (enabled: boolean) => void;
   setFactoryLevel?: (level: number) => void;
   setBonusLevel?: (level: number) => void;
+  setDisplayUpgradeLevel?: (level: number) => void;
   // 可以添加更多上下文数据
 }
 
 /**
  * 隐藏指定 id 的 item
  */
-function hideItem(itemId: string, setShopItems: PurchaseContext['setShopItems']): void {
+function hideItem(
+  itemId: string,
+  setShopItems: PurchaseContext["setShopItems"]
+): void {
   setShopItems((items) =>
-    items.map((item) =>
-      item.id === itemId ? { ...item, hidden: true } : item
-    )
+    items.map((item) => (item.id === itemId ? { ...item, hidden: true } : item))
   );
 }
 
@@ -56,14 +58,14 @@ function handleMultiplierPurchase(context: PurchaseContext): void {
     // 更新 item 的等级和价格
     setShopItems((items) =>
       items.map((i) =>
-        i.id === 'multiplier'
+        i.id === "multiplier"
           ? {
               ...i,
               currentLevel: newLevel,
               price: 50 * newLevel, // 价格递增：50, 100, 150, 200, 250
               effect: `点击 +${newLevel}`,
               // 达到最大等级时隐藏
-              hidden: newLevel >= maxLevel
+              hidden: newLevel >= maxLevel,
             }
           : i
       )
@@ -133,7 +135,7 @@ function handleFactoryPurchase(context: PurchaseContext): void {
   }
 
   const newLevel = currentLevel + 1;
-  const incomePerLevel = 25;
+  const incomePerLevel = 15;
 
   if (setFactoryLevel) {
     setFactoryLevel(newLevel);
@@ -141,7 +143,7 @@ function handleFactoryPurchase(context: PurchaseContext): void {
 
   setShopItems((items) =>
     items.map((i) => {
-      if (i.id !== 'factory') return i;
+      if (i.id !== "factory") return i;
 
       const updatedLevel = Math.min((i.currentLevel ?? 0) + 1, maxLevel);
       const isMax = updatedLevel >= maxLevel;
@@ -187,7 +189,7 @@ function handleBonusPurchase(context: PurchaseContext): void {
 
   setShopItems((items) =>
     items.map((i) => {
-      if (i.id !== 'bonus') return i;
+      if (i.id !== "bonus") return i;
 
       const updatedLevel = Math.min((i.currentLevel ?? 0) + 1, maxLevel);
       const isMax = updatedLevel >= maxLevel;
@@ -211,7 +213,6 @@ function handleBonusPurchase(context: PurchaseContext): void {
     console.log(`✅ 购买了: ${item.name}，当前等级: ${newLevel}/${maxLevel}`);
   }
 }
-
 
 /**
  * 处理 'stage-indicator' 购买（游戏进度表）
@@ -270,6 +271,53 @@ function handleButtonUpgradePurchase(context: PurchaseContext): void {
 }
 
 /**
+ * 处理 'display-upgrade' 购买（点数显示器焕新）
+ */
+function handleDisplayUpgradePurchase(context: PurchaseContext): void {
+  const { item, setShopItems, setDisplayUpgradeLevel } = context;
+  const currentLevel = item.currentLevel ?? 0;
+  const maxLevel = item.maxLevel ?? 5;
+
+  if (currentLevel >= maxLevel) {
+    console.log(`⚠️ ${item.name} 已达到最大等级`);
+    return;
+  }
+
+  const newLevel = currentLevel + 1;
+  const sizeBoostPerLevel = 20; // 百分比
+
+  if (setDisplayUpgradeLevel) {
+    setDisplayUpgradeLevel(newLevel);
+  }
+
+  setShopItems((items) =>
+    items.map((i) => {
+      if (i.id !== "display-upgrade") return i;
+
+      const updatedLevel = Math.min((i.currentLevel ?? 0) + 1, maxLevel);
+      const isMax = updatedLevel >= maxLevel;
+      const boost = Math.min(updatedLevel * sizeBoostPerLevel, 100);
+
+      return {
+        ...i,
+        currentLevel: updatedLevel,
+        price: isMax ? i.price : 180 + updatedLevel * 160,
+        effect: `字体 +${boost}%`,
+        hidden: isMax,
+      };
+    })
+  );
+
+  setPageMetaByItemId(item.id);
+
+  if (newLevel >= maxLevel) {
+    console.log(`🎉 ${item.name} 已达到最大等级并隐藏`);
+  } else {
+    console.log(`✅ 购买了: ${item.name}，当前等级: ${newLevel}/${maxLevel}`);
+  }
+}
+
+/**
  * 处理 'leaderboard' 购买（排行榜面板）
  */
 function handleLeaderboardPurchase(context: PurchaseContext): void {
@@ -309,9 +357,10 @@ const purchaseHandlers: Record<string, (context: PurchaseContext) => void> = {
   skeleton: handleSkeletonPurchase,
   factory: handleFactoryPurchase,
   bonus: handleBonusPurchase,
-  'stage-indicator': handleStageIndicatorPurchase,
-  'ai-panel': handleAIPanelPurchase,
-  'button-upgrade': handleButtonUpgradePurchase,
+  "stage-indicator": handleStageIndicatorPurchase,
+  "ai-panel": handleAIPanelPurchase,
+  "button-upgrade": handleButtonUpgradePurchase,
+  "display-upgrade": handleDisplayUpgradePurchase,
   leaderboard: handleLeaderboardPurchase,
   rocket: handleRocketPurchase,
 };
