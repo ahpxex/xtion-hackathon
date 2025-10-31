@@ -6,6 +6,7 @@ import StageIndicator from "./components/StageIndicator";
 import PenguinDisplay from "./components/PenguinDisplay";
 import SkeletonDisplay from "./components/SkeletonDisplay";
 import DevTools from "./components/DevTools";
+import Leaderboard from "./components/Leaderboard";
 
 export default function Home() {
   return (
@@ -16,11 +17,10 @@ export default function Home() {
       <NativeButton clickValue={1}>Native Button</NativeButton>
       <Shop />
 
+      <Leaderboard />
       <FloatingPanel />
       <PenguinDisplay />
       <SkeletonDisplay />
-
-
     </div>
   );
 }

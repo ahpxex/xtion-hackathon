@@ -18,6 +18,7 @@ export interface PurchaseContext {
   setShowSkeleton?: (show: boolean) => void;
   setShowStageIndicator?: (show: boolean) => void;
   setShowFloatingPanel?: (show: boolean) => void;
+  setShowLeaderboard?: (show: boolean) => void;
   // 可以添加更多上下文数据
 }
 
@@ -187,6 +188,22 @@ function handleAIPanelPurchase(context: PurchaseContext): void {
 }
 
 /**
+ * 处理 'leaderboard' 购买（排行榜面板）
+ */
+function handleLeaderboardPurchase(context: PurchaseContext): void {
+  const { item, setShopItems, setShowLeaderboard } = context;
+
+  if (setShowLeaderboard) {
+    setShowLeaderboard(true);
+  }
+
+  setPageMetaByItemId(item.id);
+  hideItem(item.id, setShopItems);
+
+  console.log(`✅ 购买了: ${item.name}，排行榜已显示`);
+}
+
+/**
  * 处理 'rocket' 购买
  */
 function handleRocketPurchase(context: PurchaseContext): void {
@@ -212,6 +229,7 @@ const purchaseHandlers: Record<string, (context: PurchaseContext) => void> = {
   bonus: handleBonusPurchase,
   'stage-indicator': handleStageIndicatorPurchase,
   'ai-panel': handleAIPanelPurchase,
+  leaderboard: handleLeaderboardPurchase,
   rocket: handleRocketPurchase,
 };
 

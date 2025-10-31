@@ -8,6 +8,15 @@ export interface ToastData {
   duration?: number; // 显示时长（毫秒），默认 3000
 }
 
+export interface LeaderboardEntry {
+  id: string;
+  rank: number;
+  name: string;
+  points: number;
+  trend: 'up' | 'down' | 'steady';
+  delta: number;
+}
+
 export const clickCountAtom = atom(0);
 
 export const clicksAtom = atom(0); // 实际点击次数（不显示在前端）
@@ -21,6 +30,15 @@ export const showSkeletonAtom = atom(false); // 是否显示骷髅
 
 export const showStageIndicatorAtom = atom(false); // 是否显示游戏进度表
 export const showFloatingPanelAtom = atom(false); // 是否显示 AI 功能
+export const showLeaderboardAtom = atom(false); // 是否显示排行榜
+
+export const leaderboardAtom = atom<LeaderboardEntry[]>([
+  { id: '1', rank: 1, name: '孙笑川258', points: 1280, trend: 'steady', delta: 0 },
+  { id: '2', rank: 2, name: '张伟Beta', points: 1175, trend: 'steady', delta: 0 },
+  { id: '3', rank: 3, name: '暴走系数', points: 980, trend: 'steady', delta: 0 },
+  { id: '4', rank: 4, name: 'QiangG', points: 755, trend: 'steady', delta: 0 },
+  { id: '5', rank: 5, name: '一号线末班', points: 640, trend: 'steady', delta: 0 },
+]);
 
 export const toastsAtom = atom<ToastData[]>([]);
 
@@ -59,6 +77,17 @@ export const shopItemsAtom = atom<ShopItemData[]>([
     level: 2,
     repeatable: false,
     stageThreshold: 200
+  },
+  {
+    id: 'leaderboard',
+    name: '全服排行榜',
+    description: '开启全球玩家实时排名面板',
+    price: 350,
+    effect: '显示排行榜',
+    icon: '🏆',
+    level: 3,
+    repeatable: false,
+    stageThreshold: 250
   },
   {
     id: 'penguin',

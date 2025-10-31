@@ -9,7 +9,8 @@ import {
   showPenguinAtom,
   showSkeletonAtom,
   showStageIndicatorAtom,
-  showFloatingPanelAtom
+  showFloatingPanelAtom,
+  showLeaderboardAtom
 } from '../store/atoms';
 import ShopItem, { ShopItemData } from './ShopItem';
 import { handleItemPurchase } from '../utils/purchaseHandler';
@@ -23,6 +24,7 @@ export default function Shop() {
   const [, setShowSkeleton] = useAtom(showSkeletonAtom);
   const [, setShowStageIndicator] = useAtom(showStageIndicatorAtom);
   const [, setShowFloatingPanel] = useAtom(showFloatingPanelAtom);
+  const [, setShowLeaderboard] = useAtom(showLeaderboardAtom);
 
   if (clickCount === 0) {
     return null;
@@ -39,6 +41,7 @@ export default function Shop() {
       setShowSkeleton,
       setShowStageIndicator,
       setShowFloatingPanel,
+      setShowLeaderboard,
     });
   };
 
