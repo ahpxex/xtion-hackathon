@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, ReactNode } from 'react';
 import { useAtom } from 'jotai';
-import { toastsAtom } from '../store/atoms';
+import { toastsAtom, showFloatingPanelAtom } from '../store/atoms';
 import Toast from './Toast';
 
 interface FloatingPanelProps {
@@ -13,6 +13,11 @@ export default function FloatingPanel({
   defaultPosition,
 }: FloatingPanelProps) {
   const [toasts, setToasts] = useAtom(toastsAtom);
+  const [showFloatingPanel] = useAtom(showFloatingPanelAtom);
+
+  if (!showFloatingPanel) {
+    return null;
+  }
   const [position, setPosition] = useState(
     defaultPosition || { x: window.innerWidth - 150, y: window.innerHeight - 150 }
   );

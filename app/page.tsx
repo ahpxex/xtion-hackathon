@@ -10,13 +10,13 @@ import DevTools from "./components/DevTools";
 export default function Home() {
   return (
     <div className="min-h-screen flex flex-col gap-6 justify-center items-center py-8">
-      {/* <StageIndicator /> */}
+      <StageIndicator />
       <DevTools />
       <CreditDisplay size="sm" />
       <NativeButton clickValue={1}>Native Button</NativeButton>
       <Shop />
 
-      {/* <FloatingPanel /> */}
+      <FloatingPanel />
       <PenguinDisplay />
       <SkeletonDisplay />
 

@@ -30,8 +30,12 @@ const faviconConfigs: Record<string, FaviconConfig> = {
     title: '点击游戏 - 幸运加持',
     emoji: '🪙',
   },
-  robot: {
-    title: '点击游戏 - 机器人助手',
+  'stage-indicator': {
+    title: '点击游戏 - 进度追踪',
+    emoji: '📊',
+  },
+  'ai-panel': {
+    title: '点击游戏 - AI 助手',
     emoji: '🤖',
   },
   rocket: {

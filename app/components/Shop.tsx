@@ -7,7 +7,9 @@ import {
   stageAtom,
   clickMultiplierAtom,
   showPenguinAtom,
-  showSkeletonAtom
+  showSkeletonAtom,
+  showStageIndicatorAtom,
+  showFloatingPanelAtom
 } from '../store/atoms';
 import ShopItem, { ShopItemData } from './ShopItem';
 import { handleItemPurchase } from '../utils/purchaseHandler';
@@ -19,6 +21,8 @@ export default function Shop() {
   const [, setClickMultiplier] = useAtom(clickMultiplierAtom);
   const [, setShowPenguin] = useAtom(showPenguinAtom);
   const [, setShowSkeleton] = useAtom(showSkeletonAtom);
+  const [, setShowStageIndicator] = useAtom(showStageIndicatorAtom);
+  const [, setShowFloatingPanel] = useAtom(showFloatingPanelAtom);
 
   if (clickCount === 0) {
     return null;
@@ -33,11 +37,17 @@ export default function Shop() {
       setClickMultiplier,
       setShowPenguin,
       setShowSkeleton,
+      setShowStageIndicator,
+      setShowFloatingPanel,
     });
   };
 
-  // 过滤掉隐藏的 items
-  const visibleItems = shopItems.filter(item => !item.hidden);
+  // 过滤掉隐藏的 items 和 stage 不够的 items
+  const visibleItems = shopItems.filter(item => {
+    if (item.hidden) return false;
+    if (item.stageThreshold && stage < item.stageThreshold) return false;
+    return true;
+  });
 
   return (
     <div className="flex flex-wrap gap-4 justify-center">

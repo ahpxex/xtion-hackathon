@@ -16,6 +16,8 @@ export interface PurchaseContext {
   setClickMultiplier?: (multiplier: number) => void;
   setShowPenguin?: (show: boolean) => void;
   setShowSkeleton?: (show: boolean) => void;
+  setShowStageIndicator?: (show: boolean) => void;
+  setShowFloatingPanel?: (show: boolean) => void;
   // 可以添加更多上下文数据
 }
 
@@ -55,13 +57,19 @@ function handleMultiplierPurchase(context: PurchaseContext): void {
               ...i,
               currentLevel: newLevel,
               price: 50 * newLevel, // 价格递增：50, 100, 150, 200, 250
-              effect: `点击 +${newLevel}`
+              effect: `点击 +${newLevel}`,
+              // 达到最大等级时隐藏
+              hidden: newLevel >= maxLevel
             }
           : i
       )
     );
 
     console.log(`✅ 购买了: ${item.name}，当前等级: ${newLevel}/${maxLevel}`);
+
+    if (newLevel >= maxLevel) {
+      console.log(`🎉 ${item.name} 已达到最大等级，物品已隐藏`);
+    }
   } else {
     console.log(`⚠️ ${item.name} 已达到最大等级`);
   }
@@ -153,6 +161,46 @@ function handleRobotPurchase(context: PurchaseContext): void {
 }
 
 /**
+ * 处理 'stage-indicator' 购买（游戏进度表）
+ */
+function handleStageIndicatorPurchase(context: PurchaseContext): void {
+  const { item, setShopItems, setShowStageIndicator } = context;
+
+  // 显示游戏进度表
+  if (setShowStageIndicator) {
+    setShowStageIndicator(true);
+  }
+
+  // 设置网页标题和图标
+  setPageMetaByItemId(item.id);
+
+  // 购买后隐藏该 item
+  hideItem(item.id, setShopItems);
+
+  console.log(`✅ 购买了: ${item.name}，游戏进度表已显示`);
+}
+
+/**
+ * 处理 'ai-panel' 购买（AI 功能）
+ */
+function handleAIPanelPurchase(context: PurchaseContext): void {
+  const { item, setShopItems, setShowFloatingPanel } = context;
+
+  // 显示 AI 面板
+  if (setShowFloatingPanel) {
+    setShowFloatingPanel(true);
+  }
+
+  // 设置网页标题和图标
+  setPageMetaByItemId(item.id);
+
+  // 购买后隐藏该 item
+  hideItem(item.id, setShopItems);
+
+  console.log(`✅ 购买了: ${item.name}，AI 面板已显示`);
+}
+
+/**
  * 处理 'rocket' 购买
  */
 function handleRocketPurchase(context: PurchaseContext): void {
@@ -176,7 +224,8 @@ const purchaseHandlers: Record<string, (context: PurchaseContext) => void> = {
   skeleton: handleSkeletonPurchase,
   factory: handleFactoryPurchase,
   bonus: handleBonusPurchase,
-  robot: handleRobotPurchase,
+  'stage-indicator': handleStageIndicatorPurchase,
+  'ai-panel': handleAIPanelPurchase,
   rocket: handleRocketPurchase,
 };
 

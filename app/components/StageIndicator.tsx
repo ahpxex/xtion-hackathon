@@ -1,10 +1,15 @@
 'use client';
 
 import { useAtom } from 'jotai';
-import { stageAtom } from '../store/atoms';
+import { stageAtom, showStageIndicatorAtom } from '../store/atoms';
 
 export default function StageIndicator() {
   const [stage] = useAtom(stageAtom);
+  const [showStageIndicator] = useAtom(showStageIndicatorAtom);
+
+  if (!showStageIndicator) {
+    return null;
+  }
 
   // 计算进度百分比
   const progress = (stage / 1000) * 100;

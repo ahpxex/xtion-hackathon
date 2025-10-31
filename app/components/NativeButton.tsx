@@ -2,7 +2,7 @@
 
 import { ButtonHTMLAttributes, useState } from 'react';
 import { useAtom } from 'jotai';
-import { clickCountAtom, clickMultiplierAtom } from '../store/atoms';
+import { clickCountAtom, clickMultiplierAtom, clicksAtom, stageAtom } from '../store/atoms';
 
 interface NativeButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode;
@@ -20,6 +20,8 @@ export default function NativeButton({ children, className = '', clickValue = 1,
   const [floatingNumbers, setFloatingNumbers] = useState<FloatingNumber[]>([]);
   const [clickCount, setClickCount] = useAtom(clickCountAtom);
   const [clickMultiplier] = useAtom(clickMultiplierAtom);
+  const [, setClicks] = useAtom(clicksAtom);
+  const [, setStage] = useAtom(stageAtom);
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
@@ -37,6 +39,8 @@ export default function NativeButton({ children, className = '', clickValue = 1,
 
     setFloatingNumbers(prev => [...prev, newNumber]);
     setClickCount(prev => prev + actualValue);
+    setClicks(prev => prev + 1); // 点击次数 +1
+    setStage(prev => prev + actualValue); // stage 增加实际产生的点数
 
     setTimeout(() => {
       setFloatingNumbers(prev => prev.filter(num => num.id !== newNumber.id));

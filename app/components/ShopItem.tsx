@@ -16,6 +16,7 @@ export interface ShopItemData {
   hidden?: boolean; // 是否隐藏（购买后）
   currentLevel?: number; // 当前升级等级（用于可升级物品）
   maxLevel?: number; // 最大升级等级（用于可升级物品）
+  stageThreshold?: number; // stage 达到此值才显示该物品
 }
 
 interface ShopItemProps {
