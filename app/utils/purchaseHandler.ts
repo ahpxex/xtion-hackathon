@@ -19,6 +19,7 @@ export interface PurchaseContext {
   setShowStageIndicator?: (show: boolean) => void;
   setShowFloatingPanel?: (show: boolean) => void;
   setShowLeaderboard?: (show: boolean) => void;
+  setFancyButton?: (enabled: boolean) => void;
   // 可以添加更多上下文数据
 }
 
@@ -188,6 +189,22 @@ function handleAIPanelPurchase(context: PurchaseContext): void {
 }
 
 /**
+ * 处理 'button-upgrade' 购买（炫彩按钮）
+ */
+function handleButtonUpgradePurchase(context: PurchaseContext): void {
+  const { item, setShopItems, setFancyButton } = context;
+
+  if (setFancyButton) {
+    setFancyButton(true);
+  }
+
+  setPageMetaByItemId(item.id);
+  hideItem(item.id, setShopItems);
+
+  console.log(`✅ 购买了: ${item.name}，按钮已升级为彩虹效果`);
+}
+
+/**
  * 处理 'leaderboard' 购买（排行榜面板）
  */
 function handleLeaderboardPurchase(context: PurchaseContext): void {
@@ -229,6 +246,7 @@ const purchaseHandlers: Record<string, (context: PurchaseContext) => void> = {
   bonus: handleBonusPurchase,
   'stage-indicator': handleStageIndicatorPurchase,
   'ai-panel': handleAIPanelPurchase,
+  'button-upgrade': handleButtonUpgradePurchase,
   leaderboard: handleLeaderboardPurchase,
   rocket: handleRocketPurchase,
 };

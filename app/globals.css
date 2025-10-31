@@ -62,3 +62,19 @@ body {
 .animate-slide-in-up {
   animation: slide-in-up 0.3s ease-out forwards;
 }
+
+@keyframes rainbow-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-rainbow {
+  animation: rainbow-shift 4.5s ease-in-out infinite;
+}

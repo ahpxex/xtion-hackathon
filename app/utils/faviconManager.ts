@@ -38,6 +38,10 @@ const faviconConfigs: Record<string, FaviconConfig> = {
     title: '点击游戏 - AI 助手',
     emoji: '🤖',
   },
+  'button-upgrade': {
+    title: '点击游戏 - 彩虹按钮上线',
+    emoji: '🌈',
+  },
   leaderboard: {
     title: '点击游戏 - 排行榜热区',
     emoji: '🏆',

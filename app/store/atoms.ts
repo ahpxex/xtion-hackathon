@@ -31,6 +31,7 @@ export const showSkeletonAtom = atom(false); // 是否显示骷髅
 export const showStageIndicatorAtom = atom(false); // 是否显示游戏进度表
 export const showFloatingPanelAtom = atom(false); // 是否显示 AI 功能
 export const showLeaderboardAtom = atom(false); // 是否显示排行榜
+export const fancyButtonAtom = atom(false); // 是否启用炫酷按钮
 
 export const leaderboardAtom = atom<LeaderboardEntry[]>([
   { id: '1', rank: 1, name: '孙笑川258', points: 1280, trend: 'steady', delta: 0 },
@@ -88,6 +89,17 @@ export const shopItemsAtom = atom<ShopItemData[]>([
     level: 3,
     repeatable: false,
     stageThreshold: 250
+  },
+  {
+    id: 'button-upgrade',
+    name: '彩虹按钮',
+    description: '将主按钮升级为炫彩流动效果',
+    price: 180,
+    effect: '按钮获得彩虹特效',
+    icon: '🌈',
+    level: 2,
+    repeatable: false,
+    stageThreshold: 150
   },
   {
     id: 'penguin',
