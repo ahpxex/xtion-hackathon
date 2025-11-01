@@ -1,20 +1,21 @@
-'use client';
+"use client";
 
-import { useAtomValue } from 'jotai';
-import NativeButton from './components/NativeButton';
-import CreditDisplay from './components/CreditDisplay';
-import Shop from './components/Shop';
-import FloatingPanel from './components/FloatingPanel';
-import StageIndicator from './components/StageIndicator';
-import PenguinDisplay from './components/PenguinDisplay';
-import SkeletonDisplay from './components/SkeletonDisplay';
-import Leaderboard from './components/Leaderboard';
-import FactoryIncomeManager from './components/FactoryIncomeManager';
-import GameStateSync from './components/GameStateSync';
-import AbstractVideoDisplay from './components/AbstractVideoDisplay';
-import { finaleModeAtom } from './store/atoms';
+import { useAtomValue } from "jotai";
+import NativeButton from "./components/NativeButton";
+import CreditDisplay from "./components/CreditDisplay";
+import Shop from "./components/Shop";
+import FloatingPanel from "./components/FloatingPanel";
+import StageIndicator from "./components/StageIndicator";
+import PenguinDisplay from "./components/PenguinDisplay";
+import SkeletonDisplay from "./components/SkeletonDisplay";
+import Leaderboard from "./components/Leaderboard";
+import FactoryIncomeManager from "./components/FactoryIncomeManager";
+import GameStateSync from "./components/GameStateSync";
+import AbstractVideoDisplay from "./components/AbstractVideoDisplay";
+import { finaleModeAtom } from "./store/atoms";
+import DevTools from "./components/DevTools";
 
-const isDev = process.env.NODE_ENV === 'development';
+const isDev = process.env.NODE_ENV === "development";
 
 export default function Home() {
   const finaleMode = useAtomValue(finaleModeAtom);
