@@ -10,21 +10,21 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gin-gonic/gin"
 	"github.com/ahpxex/xtion-hackathon/config"
 	"github.com/ahpxex/xtion-hackathon/llm"
 	"github.com/ahpxex/xtion-hackathon/storage"
 	"github.com/ahpxex/xtion-hackathon/websocket"
+	"github.com/gin-gonic/gin"
 )
 
 type Application struct {
-	cfg          *config.Config
-	router       *gin.Engine
-	server       *http.Server
-	storage      *storage.MemoryStore
-	llmClient    *llm.LLMClient
-	analyzer     *llm.StateAnalyzer
-	hub          *websocket.Hub
+	cfg       *config.Config
+	router    *gin.Engine
+	server    *http.Server
+	storage   *storage.MemoryStore
+	llmClient llm.LLMProvider
+	analyzer  *llm.StateAnalyzer
+	hub       *websocket.Hub
 }
 
 func NewApplication() (*Application, error) {
@@ -51,10 +51,10 @@ func NewApplication() (*Application, error) {
 func (app *Application) setupComponents() error {
 	app.storage = storage.NewMemoryStore(app.cfg.HistoryWindowSize)
 
-	app.llmClient = llm.NewLLMClient(app.cfg)
-	
+	app.llmClient = llm.NewDeepSeekClient(app.cfg)
+
 	if err := app.llmClient.TestConnection(); err != nil {
-		log.Printf("Warning: LLM connection test failed: %v", err)
+		log.Printf("Warning: DeepSeek connection test failed: %v", err)
 		log.Println("Server will continue, but LLM analysis may not work")
 	}
 
@@ -71,7 +71,6 @@ func (app *Application) setupRoutes() error {
 	app.router.Use(corsMiddleware())
 
 	app.router.GET("/health", app.healthHandler)
-	app.router.GET("/metrics", app.metricsHandler)
 	app.router.GET("/ws", gin.WrapH(http.HandlerFunc(app.hub.HandleWebSocket)))
 
 	return nil
@@ -83,26 +82,6 @@ func (app *Application) healthHandler(c *gin.Context) {
 		"timestamp": time.Now().UTC(),
 		"version":   "1.0.0",
 	})
-}
-
-func (app *Application) metricsHandler(c *gin.Context) {
-	sessionStats := app.storage.GetSessionStats()
-	hubMetrics := app.hub.GetMetrics()
-
-	metrics := gin.H{
-		"server": gin.H{
-			"uptime":    time.Since(time.Now()).String(),
-			"timestamp": time.Now().UTC(),
-		},
-		"sessions": sessionStats,
-		"websocket": hubMetrics,
-		"llm": gin.H{
-			"analyzer_running": app.analyzer.IsRunning(),
-			"analysis_interval": app.cfg.AnalysisIntervalSeconds.String(),
-		},
-	}
-
-	c.JSON(http.StatusOK, metrics)
 }
 
 func corsMiddleware() gin.HandlerFunc {
@@ -135,8 +114,7 @@ func (app *Application) Start() error {
 		log.Printf("Starting server on port %d", app.cfg.ServerPort)
 		log.Printf("WebSocket endpoint available at: ws://localhost:%d/ws", app.cfg.ServerPort)
 		log.Printf("Health check endpoint: http://localhost:%d/health", app.cfg.ServerPort)
-		log.Printf("Metrics endpoint: http://localhost:%d/metrics", app.cfg.ServerPort)
-		
+
 		if err := app.server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Server failed to start: %v", err)
 		}

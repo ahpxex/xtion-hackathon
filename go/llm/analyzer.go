@@ -18,23 +18,23 @@ type LLMResponse struct {
 }
 
 type AnalysisRequest struct {
-	SessionID   string          `json:"session_id"`
-	UserState   *game.UserState `json:"user_state"`
+	SessionID     string            `json:"session_id"`
+	UserState     *game.UserState   `json:"user_state"`
 	RecentActions []game.UserAction `json:"recent_actions"`
-	Timestamp   time.Time       `json:"timestamp"`
+	Timestamp     time.Time         `json:"timestamp"`
 }
 
 type AnalysisResult struct {
-	SessionID    string       `json:"session_id"`
-	Response     *LLMResponse `json:"response"`
+	SessionID     string       `json:"session_id"`
+	Response      *LLMResponse `json:"response"`
 	PreviousState string       `json:"previous_state"`
-	StateChange  bool         `json:"state_change"`
-	Timestamp    time.Time    `json:"timestamp"`
+	StateChange   bool         `json:"state_change"`
+	Timestamp     time.Time    `json:"timestamp"`
 }
 
 type StateAnalyzer struct {
 	cfg          *config.Config
-	client       *LLMClient
+	client       LLMProvider
 	analysisChan chan *AnalysisRequest
 	resultChan   chan *AnalysisResult
 	ticker       *time.Ticker
@@ -43,7 +43,7 @@ type StateAnalyzer struct {
 	running      bool
 }
 
-func NewStateAnalyzer(cfg *config.Config, client *LLMClient) *StateAnalyzer {
+func NewStateAnalyzer(cfg *config.Config, client LLMProvider) *StateAnalyzer {
 	return &StateAnalyzer{
 		cfg:          cfg,
 		client:       client,
@@ -112,7 +112,7 @@ func (sa *StateAnalyzer) tickerWorker() {
 
 func (sa *StateAnalyzer) processPendingRequests() {
 	pending := make([]*AnalysisRequest, 0)
-	
+
 	for {
 		select {
 		case req := <-sa.analysisChan:
@@ -185,11 +185,11 @@ func (sa *StateAnalyzer) analyzeUserState(req *AnalysisRequest) (*AnalysisResult
 	}
 
 	result := &AnalysisResult{
-		SessionID:    req.SessionID,
-		Response:     llmResp,
+		SessionID:     req.SessionID,
+		Response:      llmResp,
 		PreviousState: previousState,
-		StateChange:  stateChange,
-		Timestamp:    time.Now(),
+		StateChange:   stateChange,
+		Timestamp:     time.Now(),
 	}
 
 	return result, nil
@@ -208,7 +208,7 @@ Recent Actions:
 `, userState.Stage, userState.Clicks, userState.EngagementRate, userState.CurrentState)
 
 	for i, action := range recentActions {
-		prompt += fmt.Sprintf("%d. Stage: %d, Clicks: %d\n", 
+		prompt += fmt.Sprintf("%d. Stage: %d, Clicks: %d\n",
 			i+1, action.Stage, action.Clicks)
 	}
 

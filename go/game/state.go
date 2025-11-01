@@ -18,36 +18,36 @@ type UserAction struct {
 }
 
 type SessionData struct {
-	ID              string       `json:"session_id"`
-	CurrentState    string       `json:"current_state"`
-	LastAnalysis    time.Time    `json:"last_analysis"`
-	StageHistory    []int        `json:"stage_history"`
-	ClicksHistory   []int        `json:"clicks_history"`
-	ItemPurchases   []int        `json:"item_purchases"`
-	LLMResponses    []string     `json:"llm_responses"`
-	CreatedAt       time.Time    `json:"created_at"`
-	LastActivity    time.Time    `json:"last_activity"`
-	historySize     int
-	mu              sync.RWMutex
+	ID            string    `json:"session_id"`
+	CurrentState  string    `json:"current_state"`
+	LastAnalysis  time.Time `json:"last_analysis"`
+	StageHistory  []int     `json:"stage_history"`
+	ClicksHistory []int     `json:"clicks_history"`
+	ItemPurchases []int     `json:"item_purchases"`
+	LLMResponses  []string  `json:"llm_responses"`
+	CreatedAt     time.Time `json:"created_at"`
+	LastActivity  time.Time `json:"last_activity"`
+	historySize   int
+	mu            sync.RWMutex
 }
 
 type UserState struct {
-	CurrentState    string    `json:"current_state"`
-	LastChange      time.Time `json:"last_change"`
-	Stage           int       `json:"stage"`
-	Clicks          int       `json:"clicks"`
-	PreviousStage   int       `json:"previous_stage"`
-	PreviousClicks  int       `json:"previous_clicks"`
-	EngagementRate  float64   `json:"engagement_rate"`
+	CurrentState   string    `json:"current_state"`
+	LastChange     time.Time `json:"last_change"`
+	Stage          int       `json:"stage"`
+	Clicks         int       `json:"clicks"`
+	PreviousStage  int       `json:"previous_stage"`
+	PreviousClicks int       `json:"previous_clicks"`
+	EngagementRate float64   `json:"engagement_rate"`
 }
 
 func NewSessionData(sessionID string, historySize int) *SessionData {
 	now := time.Now()
 	return &SessionData{
-		ID:           sessionID,
-		CurrentState: "new",
-		LastAnalysis: now,
-		StageHistory: make([]int, 0, historySize),
+		ID:            sessionID,
+		CurrentState:  "new",
+		LastAnalysis:  now,
+		StageHistory:  make([]int, 0, historySize),
 		ClicksHistory: make([]int, 0, historySize),
 		ItemPurchases: make([]int, 0),
 		LLMResponses:  make([]string, 0),
@@ -74,7 +74,7 @@ func (sd *SessionData) UpdateState(stage, clicks int) {
 func (sd *SessionData) AddPurchase(itemID int) {
 	sd.mu.Lock()
 	defer sd.mu.Unlock()
-	
+
 	sd.ItemPurchases = append(sd.ItemPurchases, itemID)
 	sd.LastActivity = time.Now()
 }
@@ -82,7 +82,7 @@ func (sd *SessionData) AddPurchase(itemID int) {
 func (sd *SessionData) AddLLMResponse(response string) {
 	sd.mu.Lock()
 	defer sd.mu.Unlock()
-	
+
 	sd.LLMResponses = append(sd.LLMResponses, response)
 	sd.CurrentState = "analyzed"
 	sd.LastAnalysis = time.Now()
@@ -91,7 +91,7 @@ func (sd *SessionData) AddLLMResponse(response string) {
 func (sd *SessionData) UpdateCurrentState(state string) {
 	sd.mu.Lock()
 	defer sd.mu.Unlock()
-	
+
 	sd.CurrentState = state
 	sd.LastActivity = time.Now()
 }
@@ -121,7 +121,7 @@ func (sd *SessionData) GetUserState() *UserState {
 		state.PreviousClicks = sd.ClicksHistory[historyLen-2]
 		stageChange := float64(state.Stage - state.PreviousStage)
 		clicksChange := float64(state.Clicks - state.PreviousClicks)
-		
+
 		if stageChange > 0 {
 			state.EngagementRate = clicksChange / stageChange
 		}
@@ -145,7 +145,7 @@ func (sd *SessionData) GetRecentActions(limit int) []UserAction {
 
 	actions := make([]UserAction, limit)
 	start := count - limit
-	
+
 	for i := 0; i < limit; i++ {
 		actions[i] = UserAction{
 			Stage:     sd.StageHistory[start+i],
@@ -160,13 +160,13 @@ func (sd *SessionData) GetRecentActions(limit int) []UserAction {
 func (sd *SessionData) IsActive(timeout time.Duration) bool {
 	sd.mu.RLock()
 	defer sd.mu.RUnlock()
-	
+
 	return time.Since(sd.LastActivity) < timeout
 }
 
 type StateManager struct {
-	sessions map[string]*SessionData
-	mu       sync.RWMutex
+	sessions    map[string]*SessionData
+	mu          sync.RWMutex
 	historySize int
 }
 
