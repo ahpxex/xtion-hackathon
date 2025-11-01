@@ -1,4 +1,4 @@
-package client
+package main
 
 import (
 	"fmt"
@@ -14,12 +14,12 @@ import (
 )
 
 type TestClient struct {
-	conn       *websocket.Conn
-	serverURL  string
-	sessionID  string
-	messages   []interface{}
-	stopChan   chan struct{}
-	mu         sync.Mutex
+	conn      *websocket.Conn
+	serverURL string
+	sessionID string
+	messages  []interface{}
+	stopChan  chan struct{}
+	mu        sync.Mutex
 }
 
 type TestMessage struct {
@@ -101,7 +101,11 @@ func (tc *TestClient) handleMessage(message TestMessage) {
 	case "response":
 		log.Printf("📨 Response: %+v", message.Data)
 	case "error":
-		log.Printf("❌ Error: %+v", message.Data)
+		if message.Data != nil {
+			log.Printf("❌ Error: %+v", message.Data)
+		} else {
+			log.Printf("❌ Error: (no error details provided)")
+		}
 	case "client_info":
 		log.Printf("ℹ️ Client Info: %+v", message.Data)
 	default:
@@ -110,13 +114,11 @@ func (tc *TestClient) handleMessage(message TestMessage) {
 }
 
 func (tc *TestClient) SendUserAction(stage, clicks int) error {
-	message := TestMessage{
-		Type:      "user_action",
-		Timestamp: time.Now().Unix(),
-		Data: UserActionData{
-			Stage:  stage,
-			Clicks: clicks,
-		},
+	message := map[string]interface{}{
+		"type":      "user_action",
+		"stage":     stage,
+		"clicks":    clicks,
+		"timestamp": time.Now().Unix(),
 	}
 
 	return tc.sendMessage(message)
@@ -124,19 +126,17 @@ func (tc *TestClient) SendUserAction(stage, clicks int) error {
 
 func (tc *TestClient) SendPurchase(itemID int) error {
 	category := itemID % 3
-	message := TestMessage{
-		Type:      "purchase",
-		Timestamp: time.Now().Unix(),
-		Data: PurchaseData{
-			ItemID:   itemID,
-			Category: category,
-		},
+	message := map[string]interface{}{
+		"type":      "purchase",
+		"item_id":   itemID,
+		"category":  category,
+		"timestamp": time.Now().Unix(),
 	}
 
 	return tc.sendMessage(message)
 }
 
-func (tc *TestClient) sendMessage(message TestMessage) error {
+func (tc *TestClient) sendMessage(message interface{}) error {
 	if tc.conn == nil {
 		return fmt.Errorf("not connected")
 	}
@@ -149,7 +149,9 @@ func (tc *TestClient) sendMessage(message TestMessage) error {
 		return fmt.Errorf("failed to send message: %w", err)
 	}
 
-	log.Printf("📤 Sent %s message: %+v", message.Type, message.Data)
+	msgMap, _ := message.(map[string]interface{})
+	log.Printf("📤 Sent %s message: stage=%v clicks=%v item_id=%v category=%v",
+		msgMap["type"], msgMap["stage"], msgMap["clicks"], msgMap["item_id"], msgMap["category"])
 	return nil
 }
 
@@ -176,9 +178,17 @@ func (tc *TestClient) CountMessages(messageType string) int {
 }
 
 func (tc *TestClient) Close() {
-	close(tc.stopChan)
+	select {
+	case <-tc.stopChan:
+		// Already closed
+		return
+	default:
+		close(tc.stopChan)
+	}
+
 	if tc.conn != nil {
 		tc.conn.Close()
+		tc.conn = nil
 	}
 	log.Println("Test client disconnected")
 }
@@ -295,5 +305,4 @@ func main() {
 	log.Printf("📊 Final statistics:")
 	log.Printf("   Total messages received: %d", len(client.GetMessages()))
 	log.Printf("   Response messages: %d", client.CountMessages("response"))
-	log.Printf("   Error messages: %d", client.CountMessages("error"))
 }
