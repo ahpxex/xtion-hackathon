@@ -32,7 +32,7 @@ func Load() (*Config, error) {
 		LLMMaxTokens:               getEnvInt("LLM_MAX_TOKENS", 150),
 		LLMTemperature:             getEnvFloat("LLM_TEMPERATURE", 0.7),
 		RateLimitRequestsPerMinute: getEnvInt("RATE_LIMIT_REQUESTS_PER_MINUTE", 6),
-		AnalysisIntervalSeconds:    time.Duration(getEnvInt("ANALYSIS_INTERVAL_SECONDS", 10)) * time.Second,
+		AnalysisIntervalSeconds:    time.Duration(getEnvInt("ANALYSIS_INTERVAL_SECONDS", 17)) * time.Second,
 		StageMaxValue:              getEnvInt("STAGE_MAX_VALUE", 3000),
 		ClicksMaxValue:             getEnvInt("CLICKS_MAX_VALUE", 10000),
 		HistoryWindowSize:          getEnvInt("HISTORY_WINDOW_SIZE", 10),

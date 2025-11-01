@@ -54,7 +54,6 @@ func NewStateAnalyzer(cfg *config.Config, client LLMProvider) *StateAnalyzer {
 		client:          client,
 		analysisChan:    make(chan *AnalysisRequest, 100),
 		resultChan:      make(chan *AnalysisResult, 100),
-		ticker:          time.NewTicker(13 * time.Second),
 		stopChan:        make(chan struct{}),
 		pendingRequests: make(map[string]*AnalysisRequest),
 	}
