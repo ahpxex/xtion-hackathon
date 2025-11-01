@@ -56,13 +56,16 @@ export default function Shop() {
       item.id === 'multiplier'
         ? nextLevel ?? clickMultiplierValue
         : clickMultiplierValue;
+    const nextStage = Math.max(0, stage - item.price);
+
+    setStage(nextStage);
 
     sendPurchaseEvent({
       itemId: item.id,
       itemName: item.name,
       pricePaid: item.price,
       clickCount: nextClickCount,
-      stage,
+      stage: nextStage,
       clickMultiplier: nextClickMultiplier,
       currentLevel: item.currentLevel ?? null,
       nextLevel,

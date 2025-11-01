@@ -23,9 +23,11 @@ function deriveToastType(state?: string) {
 }
 
 function extractPayload(message: ServerMessage) {
-  const data = (message.data as Record<string, unknown> | undefined) ?? undefined;
+  const data =
+    (message.data as Record<string, unknown> | undefined) ?? undefined;
 
-  const stateCandidate = typeof data?.state === "string" ? data?.state : message.state;
+  const stateCandidate =
+    typeof data?.state === "string" ? data?.state : message.state;
   const messageCandidate =
     typeof data?.message === "string"
       ? data?.message
@@ -82,17 +84,19 @@ export default function FloatingPanel({ defaultPosition }: FloatingPanelProps) {
       }
 
       const { state, text } = extractPayload(serverMessage);
-      const toastText = text && text.trim().length > 0 ? text : "收到来自服务器的消息";
+      const toastText =
+        text && text.trim().length > 0 ? text : "收到来自服务器的消息";
       const toastType = deriveToastType(state);
 
-      setToasts((prevToasts) => addToast(prevToasts, toastText, toastType).toasts);
+      setToasts(
+        (prevToasts) => addToast(prevToasts, toastText, toastType).toasts
+      );
     });
 
     return () => {
       unsubscribe();
     };
   }, [setToasts, showFloatingPanel]);
-
 
   // 监听 toast 数量变化，当有新 toast 时随机移动面板
   useEffect(() => {
@@ -202,11 +206,9 @@ export default function FloatingPanel({ defaultPosition }: FloatingPanelProps) {
       {/* 圆形通知图标 */}
       <div
         ref={panelRef}
-        className={`fixed bg-gray-500 rounded-full shadow-2xl flex items-center justify-center z-[9998] ${
+        className={`fixed rounded-full flex items-center justify-center z-[9998] ${
           isDragging ? "cursor-grabbing" : "cursor-grab"
-        } ${
-          isAnimating ? "transition-all duration-300 ease-in-out" : ""
-        } hover:bg-gray-600`}
+        } ${isAnimating ? "transition-all duration-300 ease-in-out" : ""}`}
         style={{
           left: `${position.x}px`,
           top: `${position.y}px`,
