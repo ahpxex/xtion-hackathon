@@ -2,7 +2,7 @@
 
 import { ButtonHTMLAttributes, useState } from 'react';
 import { useAtom } from 'jotai';
-import { clickCountAtom, clickMultiplierAtom, clicksAtom, stageAtom, fancyButtonAtom, bonusLevelAtom } from '../store/atoms';
+import { clickCountAtom, clickMultiplierAtom, clicksAtom, stageAtom, fancyButtonAtom, bonusLevelAtom, globalMultiplierAtom } from '../store/atoms';
 
 interface NativeButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode;
@@ -21,6 +21,7 @@ export default function NativeButton({ children, className = '', clickValue = 1,
   const [floatingNumbers, setFloatingNumbers] = useState<FloatingNumber[]>([]);
   const [clickCount, setClickCount] = useAtom(clickCountAtom);
   const [clickMultiplier] = useAtom(clickMultiplierAtom);
+  const [globalMultiplier] = useAtom(globalMultiplierAtom);
   const [, setClicks] = useAtom(clicksAtom);
   const [, setStage] = useAtom(stageAtom);
   const [isFancyButton] = useAtom(fancyButtonAtom);
@@ -31,7 +32,7 @@ export default function NativeButton({ children, className = '', clickValue = 1,
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
-    const baseValue = clickValue * clickMultiplier;
+    const baseValue = clickValue * clickMultiplier * globalMultiplier;
     const bonusChance = Math.min(bonusLevel * 0.1, 1);
     const isBonus = bonusLevel > 0 && Math.random() < bonusChance;
     const totalValue = isBonus ? baseValue * 2 : baseValue;

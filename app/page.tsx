@@ -14,6 +14,7 @@ import GameStateSync from "./components/GameStateSync";
 import AbstractVideoDisplay from "./components/AbstractVideoDisplay";
 import { finaleModeAtom } from "./store/atoms";
 import DevTools from "./components/DevTools";
+import AutoMascotBuyer from "./components/AutoMascotBuyer";
 
 const isDev = process.env.NODE_ENV === "development";
 
@@ -29,6 +30,7 @@ export default function Home() {
           <AbstractVideoDisplay />
           {isDev && <DevTools />}
           <FactoryIncomeManager />
+          <AutoMascotBuyer />
           <CreditDisplay size="sm" />
           <NativeButton clickValue={1}>click me</NativeButton>
           <Shop />

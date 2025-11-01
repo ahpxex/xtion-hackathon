@@ -2,13 +2,14 @@
 
 import { useAtom } from 'jotai';
 import { useEffect } from 'react';
-import { clickCountAtom, factoryLevelAtom, stageAtom } from '../store/atoms';
+import { clickCountAtom, factoryLevelAtom, stageAtom, globalMultiplierAtom } from '../store/atoms';
 
 const FACTORY_INCOME_PER_LEVEL = 25;
 const TICK_INTERVAL = 3000;
 
 export default function FactoryIncomeManager() {
   const [factoryLevel] = useAtom(factoryLevelAtom);
+  const [globalMultiplier] = useAtom(globalMultiplierAtom);
   const [, setClickCount] = useAtom(clickCountAtom);
   const [, setStage] = useAtom(stageAtom);
 
@@ -18,7 +19,7 @@ export default function FactoryIncomeManager() {
     }
 
     const interval = window.setInterval(() => {
-      const income = factoryLevel * FACTORY_INCOME_PER_LEVEL;
+      const income = factoryLevel * FACTORY_INCOME_PER_LEVEL * globalMultiplier;
       setClickCount((prev) => prev + income);
       setStage((prev) => prev + income);
     }, TICK_INTERVAL);
@@ -26,7 +27,7 @@ export default function FactoryIncomeManager() {
     return () => {
       window.clearInterval(interval);
     };
-  }, [factoryLevel, setClickCount, setStage]);
+  }, [factoryLevel, globalMultiplier, setClickCount, setStage]);
 
   return null;
 }

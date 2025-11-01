@@ -6,6 +6,7 @@ import {
   shopItemsAtom,
   stageAtom,
   clickMultiplierAtom,
+  globalMultiplierAtom,
   penguinLevelAtom,
   skeletonLevelAtom,
   showStageIndicatorAtom,
@@ -18,6 +19,7 @@ import {
   leaderboardStyleLevelAtom,
   leaderboardBoostUntilAtom,
   leaderboardComedownUntilAtom,
+  clicksAtom,
 } from '../store/atoms';
 import ShopItem, { ShopItemData } from './ShopItem';
 import { handleItemPurchase } from '../utils/purchaseHandler';
@@ -29,7 +31,9 @@ export default function Shop() {
   const [shopItems, setShopItems] = useAtom(shopItemsAtom);
   const [stage, setStage] = useAtom(stageAtom);
   const [, setClickMultiplier] = useAtom(clickMultiplierAtom);
+  const [, setGlobalMultiplier] = useAtom(globalMultiplierAtom);
   const clickMultiplierValue = useAtomValue(clickMultiplierAtom);
+  const clicks = useAtomValue(clicksAtom);
   const [, setPenguinLevel] = useAtom(penguinLevelAtom);
   const [, setSkeletonLevel] = useAtom(skeletonLevelAtom);
   const [, setShowStageIndicator] = useAtom(showStageIndicatorAtom);
@@ -75,6 +79,7 @@ export default function Shop() {
       setShopItems,
       setStage,
       setClickMultiplier,
+      setGlobalMultiplier,
       setPenguinLevel,
       setSkeletonLevel,
       setShowStageIndicator,
@@ -94,6 +99,7 @@ export default function Shop() {
   const visibleItems = (clickCount === 0 ? [] : shopItems).filter(item => {
     if (item.hidden) return false;
     if (item.stageThreshold && stage < item.stageThreshold) return false;
+    if (item.clickThreshold !== undefined && clicks <= item.clickThreshold) return false;
     return true;
   });
 

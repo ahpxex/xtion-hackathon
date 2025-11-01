@@ -17,6 +17,7 @@ export interface ShopItemData {
   currentLevel?: number; // 当前升级等级（用于可升级物品）
   maxLevel?: number; // 最大升级等级（用于可升级物品）
   stageThreshold?: number; // stage 达到此值才显示该物品
+  clickThreshold?: number; // 点击次数达到此值后才显示（严格大于）
 }
 
 interface ShopItemProps {
@@ -86,6 +87,12 @@ export default function ShopItem({ item, onPurchase }: ShopItemProps) {
                   {item.currentLevel}/{item.maxLevel}
                   {isMaxLevel && ' (已满级)'}
                 </span>
+              </p>
+            )}
+            {item.currentLevel !== undefined && !item.maxLevel && (
+              <p className="text-sm">
+                <span className="font-semibold">数量：</span>
+                <span className="text-purple-600">x{item.currentLevel}</span>
               </p>
             )}
             <p className="text-sm">

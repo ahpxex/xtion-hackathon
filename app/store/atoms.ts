@@ -25,6 +25,7 @@ export const clicksAtom = atom(0); // 实际点击次数（不显示在前端）
 export const stageAtom = atom(0); // 游戏阶段，等于用户总共产生的点数
 
 export const clickMultiplierAtom = atom(1); // 点击倍数，默认为1
+export const globalMultiplierAtom = atom(1); // 全局倍率（火箭等效果）
 
 export const penguinLevelAtom = atom(0); // 企鹅展示等级
 export const skeletonLevelAtom = atom(0); // 骷髅展示等级
@@ -186,7 +187,6 @@ export const shopItemsAtom = atom<ShopItemData[]>([
     level: 3,
     repeatable: true,
     currentLevel: 0,
-    maxLevel: 5,
     stageThreshold: 300,
   },
   {
@@ -199,7 +199,6 @@ export const shopItemsAtom = atom<ShopItemData[]>([
     level: 3,
     repeatable: true,
     currentLevel: 0,
-    maxLevel: 5,
     stageThreshold: 300,
   },
   {
@@ -229,10 +228,10 @@ export const shopItemsAtom = atom<ShopItemData[]>([
     name: "火箭",
     description: "点数增长加速",
     price: 1000,
-    effect: "所有效果 x3",
+    effect: "所有效果 x10",
     icon: "🚀",
     level: 5,
     repeatable: false,
-    stageThreshold: 500,
+    clickThreshold: 500,
   },
 ]);

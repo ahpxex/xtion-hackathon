@@ -2,7 +2,7 @@
 
 import { ButtonHTMLAttributes, useState } from 'react';
 import { useAtom } from 'jotai';
-import { clickCountAtom } from '../store/atoms';
+import { clickCountAtom, globalMultiplierAtom } from '../store/atoms';
 
 interface FancyButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode;
@@ -27,21 +27,24 @@ export default function FancyButton({
 }: FancyButtonProps) {
   const [floatingNumbers, setFloatingNumbers] = useState<FloatingNumber[]>([]);
   const [clickCount, setClickCount] = useAtom(clickCountAtom);
+  const [globalMultiplier] = useAtom(globalMultiplierAtom);
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
 
+    const reward = clickValue * globalMultiplier;
+
     const newNumber: FloatingNumber = {
       id: Date.now() + Math.random(),
-      value: clickValue,
+      value: reward,
       x,
       y
     };
 
     setFloatingNumbers(prev => [...prev, newNumber]);
-    setClickCount(prev => prev + clickValue);
+    setClickCount(prev => prev + reward);
 
     setTimeout(() => {
       setFloatingNumbers(prev => prev.filter(num => num.id !== newNumber.id));

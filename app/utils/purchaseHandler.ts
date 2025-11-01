@@ -20,6 +20,9 @@ export interface PurchaseContext {
   setShopItems: (updater: (items: ShopItemData[]) => ShopItemData[]) => void;
   setStage?: (stage: number) => void;
   setClickMultiplier?: (multiplier: number) => void;
+  setGlobalMultiplier?: (
+    multiplier: number | ((prev: number) => number)
+  ) => void;
   setPenguinLevel?: (level: number) => void;
   setSkeletonLevel?: (level: number) => void;
   setShowStageIndicator?: (show: boolean) => void;
@@ -100,13 +103,6 @@ function handleMultiplierPurchase(context: PurchaseContext): void {
 function handlePenguinPurchase(context: PurchaseContext): void {
   const { item, setShopItems, setPenguinLevel } = context;
   const currentLevel = item.currentLevel ?? 0;
-  const maxLevel = item.maxLevel ?? 5;
-
-  if (currentLevel >= maxLevel) {
-    console.log(`⚠️ ${item.name} 已达到最大等级`);
-    return;
-  }
-
   const newLevel = currentLevel + 1;
 
   if (setPenguinLevel) {
@@ -117,26 +113,20 @@ function handlePenguinPurchase(context: PurchaseContext): void {
     items.map((i) => {
       if (i.id !== "penguin") return i;
 
-      const updatedLevel = Math.min((i.currentLevel ?? 0) + 1, maxLevel);
-      const isMax = updatedLevel >= maxLevel;
-
+      const updatedLevel = (i.currentLevel ?? 0) + 1;
       return {
         ...i,
         currentLevel: updatedLevel,
-        price: isMax ? i.price : 400 + updatedLevel * 200,
+        price: 400 + updatedLevel * 200,
         effect: `企鹅数量 x${updatedLevel}`,
-        hidden: isMax,
+        hidden: false,
       };
     })
   );
 
   setPageMetaByItemId(item.id);
 
-  if (newLevel >= maxLevel) {
-    console.log(`🎉 ${item.name} 已达到最大等级并隐藏`);
-  } else {
-    console.log(`✅ 购买了: ${item.name}，当前等级: ${newLevel}/${maxLevel}`);
-  }
+  console.log(`✅ 购买了: ${item.name}，当前等级: ${newLevel}`);
 }
 
 /**
@@ -145,13 +135,6 @@ function handlePenguinPurchase(context: PurchaseContext): void {
 function handleSkeletonPurchase(context: PurchaseContext): void {
   const { item, setShopItems, setSkeletonLevel } = context;
   const currentLevel = item.currentLevel ?? 0;
-  const maxLevel = item.maxLevel ?? 5;
-
-  if (currentLevel >= maxLevel) {
-    console.log(`⚠️ ${item.name} 已达到最大等级`);
-    return;
-  }
-
   const newLevel = currentLevel + 1;
 
   if (setSkeletonLevel) {
@@ -162,26 +145,20 @@ function handleSkeletonPurchase(context: PurchaseContext): void {
     items.map((i) => {
       if (i.id !== "skeleton") return i;
 
-      const updatedLevel = Math.min((i.currentLevel ?? 0) + 1, maxLevel);
-      const isMax = updatedLevel >= maxLevel;
-
+      const updatedLevel = (i.currentLevel ?? 0) + 1;
       return {
         ...i,
         currentLevel: updatedLevel,
-        price: isMax ? i.price : 500 + updatedLevel * 220,
+        price: 500 + updatedLevel * 220,
         effect: `骷髅数量 x${updatedLevel}`,
-        hidden: isMax,
+        hidden: false,
       };
     })
   );
 
   setPageMetaByItemId(item.id);
 
-  if (newLevel >= maxLevel) {
-    console.log(`🎉 ${item.name} 已达到最大等级并隐藏`);
-  } else {
-    console.log(`✅ 购买了: ${item.name}，当前等级: ${newLevel}/${maxLevel}`);
-  }
+  console.log(`✅ 购买了: ${item.name}，当前等级: ${newLevel}`);
 }
 
 /**
@@ -463,7 +440,11 @@ function handleLeaderboardUpgradePurchase(context: PurchaseContext): void {
  * 处理 'rocket' 购买
  */
 function handleRocketPurchase(context: PurchaseContext): void {
-  const { item, setShopItems } = context;
+  const { item, setShopItems, setGlobalMultiplier } = context;
+
+  if (setGlobalMultiplier) {
+    setGlobalMultiplier(() => 10);
+  }
 
   // 设置网页标题和图标
   setPageMetaByItemId(item.id);
@@ -471,7 +452,9 @@ function handleRocketPurchase(context: PurchaseContext): void {
   // 购买后隐藏该 item
   hideItem(item.id, setShopItems);
 
-  console.log(`✅ 购买了: ${item.name}，item 已隐藏，网页标题和图标已更新`);
+  console.log(
+    `✅ 购买了: ${item.name}，全局倍率已设置为 x10，物品已隐藏，网页标题和图标已更新`
+  );
 }
 
 
