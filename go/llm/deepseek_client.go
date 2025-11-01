@@ -1,14 +1,16 @@
 package llm
 
 import (
-	"bytes"
-	"context"
-	"encoding/json"
-	"fmt"
-	"io"
-	"log"
-	"net/http"
-	"time"
+    "bytes"
+    "context"
+    "encoding/json"
+    "fmt"
+    "io"
+    "log"
+    "net/http"
+    "regexp"
+    "strings"
+    "time"
 
 	"github.com/ahpxex/xtion-hackathon/config"
 	"github.com/ahpxex/xtion-hackathon/game"
@@ -77,18 +79,23 @@ func (dc *DeepSeekClient) AnalyzeUserState(userState *game.UserState, recentActi
 	
 	requestData := DeepSeekRequest{
 		Model: dc.cfg.LLMModel,
-		Messages: []DeepSeekMessage{
-			{
-				Role: "system",
-				Content: `You are analyzing a user playing an existential clicking game. 
-Your responses should be satirical, questioning of instant gratification, and minimalist.
-Provide responses in JSON format with the specified schema.`,
-			},
-			{
-				Role:    "user",
-				Content: prompt,
-			},
-		},
+        Messages: []DeepSeekMessage{
+            {
+                Role: "system",
+                Content: `你是一个存在主义游戏里的观察者，输出要严格遵循 JSON 字段 {"message","state_change","new_state","urgency"}。
+对 "message" 的约束：
+- 只输出一句话（中文优先），不要换行；
+- 语气使用逆反（挑衅）或陪伴（温柔）来引导用户；
+- 直接称呼 "你"，避免技术词汇；
+- 不要出现数字、点击、阶段、参与度等任何指标；
+- 保持简短有力（≤120字），并且尽量多样化，不要重复固定句式；
+- 当内部信号显示 clicks 与 stage 大致相等且都 > 1500 时，约 30% 概率在 message 中加入轻微购买诱导（例如“要不要试试商店里的东西？”），但仍不可出现任何数字或指标。`,
+            },
+            {
+                Role:    "user",
+                Content: prompt,
+            },
+        },
 		Stream:         false,
 		MaxTokens:      dc.cfg.LLMMaxTokens,
 		Temperature:    dc.cfg.LLMTemperature,
@@ -141,52 +148,82 @@ Provide responses in JSON format with the specified schema.`,
 }
 
 func (dc *DeepSeekClient) buildPrompt(userState *game.UserState, recentActions []game.UserAction) string {
-	prompt := fmt.Sprintf(`Analyze this user state and provide a satirical response.
+    // Provide context and strict output constraints. Metrics are for reasoning only.
+    prompt := fmt.Sprintf(`Context: The user is playing a minimalist, existential clicking game.
 
-Current State:
+Task: Infer the user's mood/state from the context and produce ONE concise sentence that uses
+reverse psychology or gentle companionship to nudge behavior.
+
+Output JSON fields:
+- message: one sentence, Chinese preferred, no numbers/clicks/stages/metrics.
+- state_change: true only if the state should change.
+- new_state: one of "productive", "taking_break", "disengaged", "confused", "obsessed".
+- urgency: "low", "medium", or "high".
+
+Internal signals (DO NOT mention in the message):
 - Stage: %d
 - Clicks: %d
 - Engagement Rate: %.2f
 - Previous Stage: %d
 - Previous Clicks: %d
 
-Recent Actions:`, 
-		userState.Stage, userState.Clicks, userState.EngagementRate,
-		userState.PreviousStage, userState.PreviousClicks)
+Recent Actions (for reasoning only):`, 
+        userState.Stage, userState.Clicks, userState.EngagementRate,
+        userState.PreviousStage, userState.PreviousClicks)
 
-	for i, action := range recentActions {
-		prompt += fmt.Sprintf("\n%d. Stage: %d, Clicks: %d", i+1, action.Stage, action.Clicks)
-	}
+    for i, action := range recentActions {
+        prompt += fmt.Sprintf("\n%d. Stage: %d, Clicks: %d", i+1, action.Stage, action.Clicks)
+    }
 
-	prompt += `
+    prompt += `
 
-Provide a JSON response with:
-- message: Satirical/existential comment (max 200 chars, Chinese preferred)
-- state_change: true if state should change
-- new_state: one of "productive", "taking_break", "disengaged", "confused", "obsessed"
-- urgency: "low", "medium", or "high"
+ Style requirements for "message":
+ - Speak directly to "你"; keep it intimate or teasing.
+ - Use reverse psychology (挑衅) or companionship (陪伴) tone.
+ - Be short, impactful, and avoid any numeric references.
 
-Examples:
-- High stage, low clicks: "哈？为什么不试试消费物品？"
-- Confusing pattern: "???"
-- Good progress: "Clicking. What an achievement."
-`
+ Purchase-nudge rule (do not reveal numbers in message):
+ - If Stage and Clicks are roughly equal and both > 1500, you MAY choose to gently encourage a purchase with ~30% probability.
+ - Example phrases (examples only, do not repeat verbatim): "要不要试试商店里的东西？", "不如买点什么让这世界动起来？"`
 
-	return prompt
+    return prompt
 }
 
 func (dc *DeepSeekClient) validateResponse(response *LLMResponse) error {
-	if response.Message == "" {
-		return fmt.Errorf("message cannot be empty")
-	}
-	if len(response.Message) > 200 {
-		return fmt.Errorf("message exceeds 200 characters")
-	}
-	if response.Urgency != "low" && response.Urgency != "medium" && response.Urgency != "high" {
-		return fmt.Errorf("urgency must be low, medium, or high")
-	}
-	if response.StateChange && response.NewState != "" {
-		validStates := map[string]bool{
+    if response.Message == "" {
+        return fmt.Errorf("message cannot be empty")
+    }
+    // Enforce concise one-sentence and non-metric messaging per prompt constraints.
+    if len(response.Message) > 120 {
+        return fmt.Errorf("message exceeds 120 characters")
+    }
+    if strings.Contains(response.Message, "\n") {
+        return fmt.Errorf("message should be a single sentence without newlines")
+    }
+    sepCount := strings.Count(response.Message, ".") +
+        strings.Count(response.Message, "。") +
+        strings.Count(response.Message, "?") +
+        strings.Count(response.Message, "？") +
+        strings.Count(response.Message, "!") +
+        strings.Count(response.Message, "！")
+    if sepCount > 1 {
+        return fmt.Errorf("message should be exactly one sentence")
+    }
+    if regexp.MustCompile("[0-9]").MatchString(response.Message) {
+        return fmt.Errorf("message should not include numeric references")
+    }
+    lower := strings.ToLower(response.Message)
+    forbidden := []string{"click", "stage", "engagement", "rate", "点击", "阶段", "点击率", "参与度", "频率", "级别", "谁知道", "你似乎", "who knows"}
+    for _, w := range forbidden {
+        if strings.Contains(lower, w) {
+            return fmt.Errorf("message should not mention metrics or technical terms")
+        }
+    }
+    if response.Urgency != "low" && response.Urgency != "medium" && response.Urgency != "high" {
+        return fmt.Errorf("urgency must be low, medium, or high")
+    }
+    if response.StateChange && response.NewState != "" {
+        validStates := map[string]bool{
 			"productive":   true,
 			"taking_break": true,
 			"disengaged":   true,

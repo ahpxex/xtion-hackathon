@@ -33,39 +33,45 @@ type AnalysisResult struct {
 }
 
 type StateAnalyzer struct {
-	cfg          *config.Config
-	client       LLMProvider
-	analysisChan chan *AnalysisRequest
-	resultChan   chan *AnalysisResult
-	ticker       *time.Ticker
-	stopChan     chan struct{}
-	mu           sync.RWMutex
-	running      bool
+    cfg          *config.Config
+    client       LLMProvider
+    analysisChan chan *AnalysisRequest
+    resultChan   chan *AnalysisResult
+    ticker       *time.Ticker
+    stopChan     chan struct{}
+    mu           sync.RWMutex
+    running      bool
+    // pendingRequests stores the latest AnalysisRequest per session.
+    // We coalesce multiple user_action events and only analyze the most recent
+    // request for each session at the configured interval.
+    pendingRequests map[string]*AnalysisRequest
+    pendingMu       sync.Mutex
 }
 
 func NewStateAnalyzer(cfg *config.Config, client LLMProvider) *StateAnalyzer {
-	return &StateAnalyzer{
-		cfg:          cfg,
-		client:       client,
-		analysisChan: make(chan *AnalysisRequest, 100),
-		resultChan:   make(chan *AnalysisResult, 100),
-		stopChan:     make(chan struct{}),
-	}
+    return &StateAnalyzer{
+        cfg:          cfg,
+        client:       client,
+        analysisChan: make(chan *AnalysisRequest, 100),
+        resultChan:   make(chan *AnalysisResult, 100),
+        stopChan:     make(chan struct{}),
+        pendingRequests: make(map[string]*AnalysisRequest),
+    }
 }
 
 func (sa *StateAnalyzer) Start() {
-	sa.mu.Lock()
-	defer sa.mu.Unlock()
+    sa.mu.Lock()
+    defer sa.mu.Unlock()
 
 	if sa.running {
 		return
 	}
 
-	sa.running = true
-	sa.ticker = time.NewTicker(sa.cfg.AnalysisIntervalSeconds)
+    sa.running = true
+    sa.ticker = time.NewTicker(sa.cfg.AnalysisIntervalSeconds)
 
-	go sa.analysisWorker()
-	go sa.tickerWorker()
+    go sa.analysisWorker()
+    go sa.tickerWorker()
 
 	log.Printf("State analyzer started with %s interval", sa.cfg.AnalysisIntervalSeconds)
 }
@@ -88,11 +94,11 @@ func (sa *StateAnalyzer) Stop() {
 }
 
 func (sa *StateAnalyzer) QueueAnalysis(req *AnalysisRequest) {
-	select {
-	case sa.analysisChan <- req:
-	default:
-		log.Printf("Analysis queue full for session %s, dropping request", req.SessionID)
-	}
+    select {
+    case sa.analysisChan <- req:
+    default:
+        log.Printf("Analysis queue full for session %s, dropping request", req.SessionID)
+    }
 }
 
 func (sa *StateAnalyzer) GetResults() <-chan *AnalysisResult {
@@ -100,99 +106,98 @@ func (sa *StateAnalyzer) GetResults() <-chan *AnalysisResult {
 }
 
 func (sa *StateAnalyzer) tickerWorker() {
-	for {
-		select {
-		case <-sa.ticker.C:
-			sa.processPendingRequests()
-		case <-sa.stopChan:
-			return
-		}
-	}
+    for {
+        select {
+        case <-sa.ticker.C:
+            // Drain latest pending requests per session and analyze them.
+            requests := sa.drainPendingRequests()
+            if len(requests) > 0 {
+                sa.analyzeRequests(requests)
+            }
+        case <-sa.stopChan:
+            return
+        }
+    }
 }
 
-func (sa *StateAnalyzer) processPendingRequests() {
-	pending := make([]*AnalysisRequest, 0)
+// addPendingRequest stores or updates the latest request for a session.
+func (sa *StateAnalyzer) addPendingRequest(req *AnalysisRequest) {
+    sa.pendingMu.Lock()
+    existing, ok := sa.pendingRequests[req.SessionID]
+    if !ok || existing.Timestamp.Before(req.Timestamp) {
+        sa.pendingRequests[req.SessionID] = req
+    }
+    sa.pendingMu.Unlock()
+}
 
-	for {
-		select {
-		case req := <-sa.analysisChan:
-			pending = append(pending, req)
-		default:
-			if len(pending) == 0 {
-				return
-			}
-			sa.analyzeRequests(pending)
-			return
-		}
-	}
+// drainPendingRequests returns and clears the current pending requests.
+func (sa *StateAnalyzer) drainPendingRequests() []*AnalysisRequest {
+    sa.pendingMu.Lock()
+    if len(sa.pendingRequests) == 0 {
+        sa.pendingMu.Unlock()
+        return nil
+    }
+    requests := make([]*AnalysisRequest, 0, len(sa.pendingRequests))
+    for _, r := range sa.pendingRequests {
+        requests = append(requests, r)
+    }
+    sa.pendingRequests = make(map[string]*AnalysisRequest)
+    sa.pendingMu.Unlock()
+    return requests
 }
 
 func (sa *StateAnalyzer) analyzeRequests(requests []*AnalysisRequest) {
-	for _, req := range requests {
-		go func(r *AnalysisRequest) {
-			result, err := sa.analyzeUserState(r)
-			if err != nil {
-				log.Printf("Analysis failed for session %s: %v", r.SessionID, err)
-				return
-			}
+    for _, req := range requests {
+        go func(r *AnalysisRequest) {
+            result, err := sa.analyzeUserState(r)
+            if err != nil {
+                log.Printf("Analysis failed for session %s: %v", r.SessionID, err)
+                return
+            }
 
-			select {
-			case sa.resultChan <- result:
-			default:
-				log.Printf("Result channel full, dropping analysis for session %s", result.SessionID)
-			}
-		}(req)
-	}
+            select {
+            case sa.resultChan <- result:
+            default:
+                log.Printf("Result channel full, dropping analysis for session %s", result.SessionID)
+            }
+        }(req)
+    }
 }
 
 func (sa *StateAnalyzer) analysisWorker() {
-	for {
-		select {
-		case req := <-sa.analysisChan:
-			go func(r *AnalysisRequest) {
-				result, err := sa.analyzeUserState(r)
-				if err != nil {
-					log.Printf("Analysis failed for session %s: %v", r.SessionID, err)
-					return
-				}
-
-				select {
-				case sa.resultChan <- result:
-				default:
-					log.Printf("Result channel full, dropping analysis for session %s", result.SessionID)
-				}
-			}(req)
-		case <-sa.stopChan:
-			return
-		}
-	}
+    for {
+        select {
+        case req := <-sa.analysisChan:
+            // Do not analyze immediately. Coalesce requests per session.
+            sa.addPendingRequest(req)
+        case <-sa.stopChan:
+            return
+        }
+    }
 }
 
 func (sa *StateAnalyzer) analyzeUserState(req *AnalysisRequest) (*AnalysisResult, error) {
-	if req.UserState == nil {
-		return nil, fmt.Errorf("user state is nil")
-	}
+    if req.UserState == nil {
+        return nil, fmt.Errorf("user state is nil")
+    }
 
-	llmResp, err := sa.client.AnalyzeUserState(req.UserState, req.RecentActions)
-	if err != nil {
-		return nil, fmt.Errorf("LLM analysis failed: %w", err)
-	}
+    llmResp, err := sa.client.AnalyzeUserState(req.UserState, req.RecentActions)
+    if err != nil {
+        return nil, fmt.Errorf("LLM analysis failed: %w", err)
+    }
 
-	previousState := req.UserState.CurrentState
-	stateChange := llmResp.StateChange
-	if llmResp.NewState != "" {
-		stateChange = true
-	}
+    previousState := req.UserState.CurrentState
+    stateChange := llmResp.NewState != "" && llmResp.NewState != previousState
 
-	result := &AnalysisResult{
-		SessionID:     req.SessionID,
-		Response:      llmResp,
-		PreviousState: previousState,
-		StateChange:   stateChange,
-		Timestamp:     time.Now(),
-	}
+    result := &AnalysisResult{
+        SessionID:     req.SessionID,
+        Response:      llmResp,
+        PreviousState: previousState,
+        StateChange:   stateChange,
+        Timestamp:     time.Now(),
+    }
 
-	return result, nil
+    return result, nil
 }
 
 func (sa *StateAnalyzer) buildPrompt(userState *game.UserState, recentActions []game.UserAction) string {

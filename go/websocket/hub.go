@@ -265,22 +265,22 @@ func getPurchaseCategory(itemID int) string {
 }
 
 func getEncodedResponse(itemID int) string {
-	responses := map[int]string{
-		0: "Your click multiplier feels... meaningless somehow.",
-		1: "An auto-clicker. Because clicking manually is too much effort.",
-		2: "You bought an abstract meme. The void is pleased.",
-		3: "More clicks per click. What a profound achievement.",
-		4: "Automation for your automation. How meta.",
-		5: "A digital concept. You can't even hold it.",
-		6: "Clicking harder. Is that really progress?",
-		7: "The machine clicks for you. Are you still playing?",
-		8: "Consuming pixels. Modern life.",
-	}
+    responses := map[int]string{
+        0: "你的点击倍增器……好像也没那么有意义。",
+        1: "自动点击器？看来手动已经不配了。",
+        2: "你买了一个抽象梗，虚空很满意。",
+        3: "每次点击变多了，真是深刻的成就呢。",
+        4: "给自动化再来点自动化，太元了。",
+        5: "一个数字概念，你甚至摸不到它。",
+        6: "更用力地点击，这算是进步吗？",
+        7: "机器替你点了，你还在玩吗？",
+        8: "消费像素，现代人的浪漫。",
+    }
 
-	if response, exists := responses[itemID]; exists {
-		return response
-	}
-	return "You bought something. Congratulations?"
+    if response, exists := responses[itemID]; exists {
+        return response
+    }
+    return "你买了点什么。恭喜？"
 }
 
 func generateSessionID() string {
