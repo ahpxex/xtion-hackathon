@@ -1,4 +1,4 @@
-export const multiplierTiers = [1, 2, 5, 20, 50, 100] as const;
+export const multiplierTiers = [1, 2, 5, 10, 20, 30] as const;
 
 export const MAX_MULTIPLIER_LEVEL = multiplierTiers.length - 1;
 
