@@ -8,10 +8,12 @@ import SkeletonDisplay from "./components/SkeletonDisplay";
 import DevTools from "./components/DevTools";
 import Leaderboard from "./components/Leaderboard";
 import FactoryIncomeManager from "./components/FactoryIncomeManager";
+import GameStateSync from "./components/GameStateSync";
 
 export default function Home() {
   return (
     <div className="min-h-screen flex flex-col gap-6 justify-center items-center py-8">
+      <GameStateSync />
       <StageIndicator />
       <DevTools />
       <FactoryIncomeManager />

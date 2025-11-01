@@ -1,6 +1,6 @@
 'use client';
 
-import { useAtom } from 'jotai';
+import { useAtom, useAtomValue } from 'jotai';
 import {
   clickCountAtom,
   shopItemsAtom,
@@ -21,12 +21,14 @@ import {
 } from '../store/atoms';
 import ShopItem, { ShopItemData } from './ShopItem';
 import { handleItemPurchase } from '../utils/purchaseHandler';
+import { sendPurchaseEvent } from '../utils/websocketClient';
 
 export default function Shop() {
   const [clickCount] = useAtom(clickCountAtom);
   const [shopItems, setShopItems] = useAtom(shopItemsAtom);
   const [stage, setStage] = useAtom(stageAtom);
   const [, setClickMultiplier] = useAtom(clickMultiplierAtom);
+  const clickMultiplierValue = useAtomValue(clickMultiplierAtom);
   const [, setPenguinLevel] = useAtom(penguinLevelAtom);
   const [, setSkeletonLevel] = useAtom(skeletonLevelAtom);
   const [, setShowStageIndicator] = useAtom(showStageIndicatorAtom);
@@ -45,6 +47,28 @@ export default function Shop() {
   }
 
   const handlePurchase = (item: ShopItemData) => {
+    const nextClickCount = Math.max(0, clickCount - item.price);
+    const nextLevel =
+      item.currentLevel !== undefined
+        ? Math.min((item.currentLevel ?? 0) + 1, item.maxLevel ?? (item.currentLevel ?? 0) + 1)
+        : null;
+    const nextClickMultiplier =
+      item.id === 'multiplier'
+        ? nextLevel ?? clickMultiplierValue
+        : clickMultiplierValue;
+
+    sendPurchaseEvent({
+      itemId: item.id,
+      itemName: item.name,
+      pricePaid: item.price,
+      clickCount: nextClickCount,
+      stage,
+      clickMultiplier: nextClickMultiplier,
+      currentLevel: item.currentLevel ?? null,
+      nextLevel,
+      repeatable: item.repeatable,
+    });
+
     // 调用统一的购买处理器
     handleItemPurchase({
       item,

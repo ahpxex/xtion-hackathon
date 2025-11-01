@@ -1,10 +1,43 @@
 "use client";
 
-import { useState, useRef, useEffect, ReactNode } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useAtom } from "jotai";
 import { toastsAtom, showFloatingPanelAtom } from "../store/atoms";
 import Toast from "./Toast";
 import { Bell } from "lucide-react";
+import { ServerMessage, subscribeToGameSocket } from "../utils/websocketClient";
+import { addToast } from "../utils/toastHelpers";
+
+function deriveToastType(state?: string) {
+  if (!state) {
+    return "info" as const;
+  }
+
+  const normalized = state.toUpperCase();
+  if (normalized.includes("ERROR")) return "error" as const;
+  if (normalized.includes("WARN")) return "warning" as const;
+  if (normalized.includes("SUCCESS") || normalized.includes("OK")) {
+    return "success" as const;
+  }
+  return "info" as const;
+}
+
+function extractPayload(message: ServerMessage) {
+  const data = (message.data as Record<string, unknown> | undefined) ?? undefined;
+
+  const stateCandidate = typeof data?.state === "string" ? data?.state : message.state;
+  const messageCandidate =
+    typeof data?.message === "string"
+      ? data?.message
+      : typeof message.message === "string"
+      ? message.message
+      : undefined;
+
+  return {
+    state: stateCandidate,
+    text: messageCandidate,
+  };
+}
 
 interface FloatingPanelProps {
   defaultPosition?: { x: number; y: number };
@@ -37,65 +70,29 @@ export default function FloatingPanel({ defaultPosition }: FloatingPanelProps) {
     }
   }, [defaultPosition]);
 
-  // 模拟随机弹出消息
+  // 监听后端 WebSocket 消息并将其转换为 toast
   useEffect(() => {
     if (!showFloatingPanel) {
       return undefined;
     }
 
-    const messages = [
-      { type: "info" as const, text: "系统运行正常" },
-      { type: "success" as const, text: "数据同步成功" },
-      { type: "warning" as const, text: "内存使用率较高" },
-      { type: "error" as const, text: "连接超时" },
-      { type: "info" as const, text: "有新的更新可用" },
-      { type: "success" as const, text: "备份完成" },
-      { type: "warning" as const, text: "磁盘空间不足" },
-      { type: "info" as const, text: "收到新消息" },
-    ];
+    const unsubscribe = subscribeToGameSocket((serverMessage) => {
+      if (!serverMessage) {
+        return;
+      }
 
-    const randomInterval = () => Math.random() * 4000 + 2000; // 2-6秒之间随机
+      const { state, text } = extractPayload(serverMessage);
+      const toastText = text && text.trim().length > 0 ? text : "收到来自服务器的消息";
+      const toastType = deriveToastType(state);
 
-    let timeoutId: ReturnType<typeof setTimeout> | null = null;
-    let isActive = true;
-
-    const scheduleNextToast = () => {
-      timeoutId = setTimeout(() => {
-        if (!isActive) {
-          return;
-        }
-
-        const randomMessage =
-          messages[Math.floor(Math.random() * messages.length)];
-
-        setToasts((prevToasts) => {
-          const id = `toast_${Date.now()}_${Math.random()
-            .toString(36)
-            .substr(2, 9)}`;
-          return [
-            ...prevToasts,
-            {
-              id,
-              message: randomMessage.text,
-              type: randomMessage.type,
-              duration: 3000,
-            },
-          ];
-        });
-
-        scheduleNextToast();
-      }, randomInterval());
-    };
-
-    scheduleNextToast();
+      setToasts((prevToasts) => addToast(prevToasts, toastText, toastType).toasts);
+    });
 
     return () => {
-      isActive = false;
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
+      unsubscribe();
     };
   }, [setToasts, showFloatingPanel]);
+
 
   // 监听 toast 数量变化，当有新 toast 时随机移动面板
   useEffect(() => {
