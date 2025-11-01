@@ -8,12 +8,13 @@ import FloatingPanel from './components/FloatingPanel';
 import StageIndicator from './components/StageIndicator';
 import PenguinDisplay from './components/PenguinDisplay';
 import SkeletonDisplay from './components/SkeletonDisplay';
-import DevTools from './components/DevTools';
 import Leaderboard from './components/Leaderboard';
 import FactoryIncomeManager from './components/FactoryIncomeManager';
 import GameStateSync from './components/GameStateSync';
 import AbstractVideoDisplay from './components/AbstractVideoDisplay';
 import { finaleModeAtom } from './store/atoms';
+
+const isDev = process.env.NODE_ENV === 'development';
 
 export default function Home() {
   const finaleMode = useAtomValue(finaleModeAtom);
@@ -25,7 +26,7 @@ export default function Home() {
       {!finaleMode && (
         <>
           <AbstractVideoDisplay />
-          <DevTools />
+          {isDev && <DevTools />}
           <FactoryIncomeManager />
           <CreditDisplay size="sm" />
           <NativeButton clickValue={1}>Native Button</NativeButton>
