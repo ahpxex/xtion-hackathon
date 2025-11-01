@@ -52,8 +52,8 @@ export default function FloatingPanel({ defaultPosition }: FloatingPanelProps) {
   // 所有 hooks 必须在条件判断之前调用
   const [position, setPosition] = useState(
     defaultPosition || {
-      x: window.innerWidth - 150,
-      y: window.innerHeight - 150,
+      x: 0,
+      y: 0,
     }
   );
   const [isDragging, setIsDragging] = useState(false);
@@ -63,7 +63,7 @@ export default function FloatingPanel({ defaultPosition }: FloatingPanelProps) {
   const previousToastCountRef = useRef(0);
 
   useEffect(() => {
-    if (!defaultPosition) {
+    if (!defaultPosition && typeof window !== 'undefined') {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setPosition({
         x: window.innerWidth - 150,
@@ -102,7 +102,7 @@ export default function FloatingPanel({ defaultPosition }: FloatingPanelProps) {
   // 监听 toast 数量变化，当有新 toast 时随机移动面板
   useEffect(() => {
     const moveToRandomPosition = () => {
-      if (!panelRef.current) return;
+      if (!panelRef.current || typeof window === 'undefined') return;
 
       const panelWidth = panelRef.current.offsetWidth;
       const panelHeight = panelRef.current.offsetHeight;
@@ -152,7 +152,7 @@ export default function FloatingPanel({ defaultPosition }: FloatingPanelProps) {
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      if (isDragging) {
+      if (isDragging && typeof window !== 'undefined') {
         const newX = e.clientX - dragOffset.x;
         const newY = e.clientY - dragOffset.y;
 
@@ -194,7 +194,7 @@ export default function FloatingPanel({ defaultPosition }: FloatingPanelProps) {
         className="fixed flex flex-col-reverse gap-2 pointer-events-none z-[9999]"
         style={{
           left: `${position.x}px`,
-          bottom: `${window.innerHeight - position.y + 16}px`,
+          bottom: typeof window !== 'undefined' ? `${window.innerHeight - position.y + 16}px` : '16px',
         }}
       >
         {toasts.map((toast) => (
