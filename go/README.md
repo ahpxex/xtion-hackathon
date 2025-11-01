@@ -203,3 +203,59 @@ The project follows TDD principles with comprehensive test coverage. All core fu
 ## License
 
 This project is part of the xtion-hackathon initiative.
+
+
+## bash script
+```text
+
+peninsula@HONOR:~/go/src/xtion-hackathon/go$ node scripts/ws_test.js
+Connecting to ws://localhost:8080/ws ...
+✅ WebSocket connected
+📤 Sent purchase: {"type":"purchase","item_id":2,"category":2,"timestamp":1761960031}
+📨 Response @1761960031: {
+  message: 'You bought an abstract meme. The void is pleased.',
+  state: 'PURCHASE_RESPONSE'
+}
+📤 Sent user_action: {"type":"user_action","stage":10,"clicks":50,"timestamp":1761960031}
+📨 Response @1761960031: {
+  message: 'state updated: stage=10, clicks=50',
+  state: 'USER_STATE_UPDATED'
+}
+📤 Sent user_action: {"type":"user_action","stage":20,"clicks":100,"timestamp":1761960032}
+📨 Response @1761960032: {
+  message: 'state updated: stage=20, clicks=100',
+  state: 'USER_STATE_UPDATED'
+}
+📤 Sent user_action: {"type":"user_action","stage":30,"clicks":150,"timestamp":1761960032}
+📨 Response @1761960032: {
+  message: 'state updated: stage=30, clicks=150',
+  state: 'USER_STATE_UPDATED'
+}
+📤 Sent user_action: {"type":"user_action","stage":40,"clicks":200,"timestamp":1761960033}
+📨 Response @1761960033: {
+  message: 'state updated: stage=40, clicks=200',
+  state: 'USER_STATE_UPDATED'
+}
+📤 Sent user_action: {"type":"user_action","stage":50,"clicks":250,"timestamp":1761960033}
+📨 Response @1761960033: {
+  message: 'state updated: stage=50, clicks=250',
+  state: 'USER_STATE_UPDATED'
+}
+📤 Sent user_action: {"type":"user_action","stage":60,"clicks":300,"timestamp":1761960034}
+📨 Response @1761960034: {
+  message: 'state updated: stage=60, clicks=300',
+  state: 'USER_STATE_UPDATED'
+}
+📤 Sent user_action: {"type":"user_action","stage":70,"clicks":350,"timestamp":1761960034}
+📨 Response @1761960034: {
+  message: 'state updated: stage=70, clicks=350',
+  state: 'USER_STATE_UPDATED'
+}
+📨 Response @1761960035: { message: '从零到十，五十次点击，却毫无参与感？这游戏在嘲笑你的存在吗？', state: 'confused' }
+🤖 LLM response detected: { message: '从零到十，五十次点击，却毫无参与感？这游戏在嘲笑你的存在吗？', state: 'confused' }
+🏁 Test completed, closing WebSocket.
+🔌 WebSocket closed
+📤 Sent user_action: {"type":"user_action","stage":80,"clicks":400,"timestamp":1761960035}
+📤 Sent user_action: {"type":"user_action","stage":90,"clicks":450,"timestamp":1761960035}
+📤 Sent user_action: {"type":"user_action","stage":100,"clicks":500,"timestamp":1761960036}
+```

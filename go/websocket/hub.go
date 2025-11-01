@@ -1,16 +1,15 @@
 package websocket
 
 import (
-	"fmt"
-	"log"
-	"net/http"
-	"sync"
-	"time"
+    "log"
+    "net/http"
+    "sync"
+    "time"
 
-	"github.com/ahpxex/xtion-hackathon/config"
-	"github.com/ahpxex/xtion-hackathon/game"
-	"github.com/ahpxex/xtion-hackathon/llm"
-	"github.com/gorilla/websocket"
+    "github.com/ahpxex/xtion-hackathon/config"
+    "github.com/ahpxex/xtion-hackathon/game"
+    "github.com/ahpxex/xtion-hackathon/llm"
+    "github.com/gorilla/websocket"
 )
 
 var upgrader = websocket.Upgrader{
@@ -116,40 +115,33 @@ func (h *Hub) handleClientMessage(client *Client, msg *ClientMessage) {
 }
 
 func (h *Hub) handleUserAction(client *Client, msg *ClientMessage) {
-	if err := h.messageHandler.ValidateUserAction(msg); err != nil {
-		log.Printf("Validation error for client %s: %v", client.sessionID, err)
-		h.sendErr(client, err)
-		return
-	}
+    if err := h.messageHandler.ValidateUserAction(msg); err != nil {
+        log.Printf("Validation error for client %s: %v", client.sessionID, err)
+        h.sendErr(client, err)
+        return
+    }
 
-	session, err := h.stateManager.UpdateSessionState(client.sessionID, msg.Stage, msg.Clicks)
-	if err != nil {
-		h.sendErr(client, err)
-		return
-	}
+    session, err := h.stateManager.UpdateSessionState(client.sessionID, msg.Stage, msg.Clicks)
+    if err != nil {
+        h.sendErr(client, err)
+        return
+    }
 
-	client.sessionData = session
+    client.sessionData = session
 
-	// 立即返回一个响应，确保客户端在 user_action 后能读到消息
-	ack := h.messageHandler.CreateResponse(
-		"USER_STATE_UPDATED",
-		fmt.Sprintf("state updated: stage=%d, clicks=%d", msg.Stage, msg.Clicks),
-	)
-	h.sendMessage(client, ack)
+    if h.analyzer.IsRunning() {
+        userState := session.GetUserState()
+        recentActions := session.GetRecentActions(h.cfg.HistoryWindowSize)
 
-	if h.analyzer.IsRunning() {
-		userState := session.GetUserState()
-		recentActions := session.GetRecentActions(h.cfg.HistoryWindowSize)
+        req := &llm.AnalysisRequest{
+            SessionID:     client.sessionID,
+            UserState:     userState,
+            RecentActions: recentActions,
+            Timestamp:     time.Now(),
+        }
 
-		req := &llm.AnalysisRequest{
-			SessionID:     client.sessionID,
-			UserState:     userState,
-			RecentActions: recentActions,
-			Timestamp:     time.Now(),
-		}
-
-		h.analyzer.QueueAnalysis(req)
-	}
+        h.analyzer.QueueAnalysis(req)
+    }
 }
 
 func (h *Hub) handlePurchase(client *Client, msg *ClientMessage) {
@@ -184,7 +176,7 @@ func (h *Hub) handleAnalysisResult(result *llm.AnalysisResult) {
 	h.mu.RUnlock()
 
 	if !exists {
-		log.Printf("Analysis result for unknown session: %s", result.SessionID)
+		//log.Printf("Analysis result for unknown session: %s", result.SessionID)
 		return
 	}
 
