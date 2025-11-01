@@ -202,11 +202,11 @@ export default function FloatingPanel({ defaultPosition }: FloatingPanelProps) {
       {/* 圆形通知图标 */}
       <div
         ref={panelRef}
-        className={`fixed bg-transparent rounded-full flex items-center justify-center z-[9998] ${
+        className={`fixed bg-gray-500 rounded-full shadow-2xl flex items-center justify-center z-[9998] ${
           isDragging ? "cursor-grabbing" : "cursor-grab"
         } ${
           isAnimating ? "transition-all duration-300 ease-in-out" : ""
-        } `}
+        } hover:bg-gray-600`}
         style={{
           left: `${position.x}px`,
           top: `${position.y}px`,

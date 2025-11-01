@@ -17,7 +17,7 @@ import {
   displayUpgradeLevelAtom,
   leaderboardStyleLevelAtom,
   leaderboardBoostUntilAtom,
-  leaderboardComedownUntilAtom
+  leaderboardComedownUntilAtom,
 } from '../store/atoms';
 import ShopItem, { ShopItemData } from './ShopItem';
 import { handleItemPurchase } from '../utils/purchaseHandler';

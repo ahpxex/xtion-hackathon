@@ -19,7 +19,6 @@ export interface PurchaseContext {
   setShowStageIndicator?: (show: boolean) => void;
   setShowFloatingPanel?: (show: boolean) => void;
   setShowLeaderboard?: (show: boolean) => void;
-  setFancyButton?: (enabled: boolean) => void;
   setFactoryLevel?: (level: number) => void;
   setBonusLevel?: (level: number) => void;
   setDisplayUpgradeLevel?: (level: number) => void;
@@ -463,6 +462,7 @@ function handleRocketPurchase(context: PurchaseContext): void {
 
   console.log(`✅ 购买了: ${item.name}，item 已隐藏，网页标题和图标已更新`);
 }
+
 
 /**
  * 购买行为处理器映射

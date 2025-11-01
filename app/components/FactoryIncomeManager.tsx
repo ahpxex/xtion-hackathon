@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 import { clickCountAtom, factoryLevelAtom, stageAtom } from '../store/atoms';
 
 const FACTORY_INCOME_PER_LEVEL = 25;
-const TICK_INTERVAL = 1000;
+const TICK_INTERVAL = 3000;
 
 export default function FactoryIncomeManager() {
   const [factoryLevel] = useAtom(factoryLevelAtom);
