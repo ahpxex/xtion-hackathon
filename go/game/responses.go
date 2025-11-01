@@ -29,23 +29,23 @@ func NewResponseSystem() *ResponseSystem {
 }
 
 func (rs *ResponseSystem) initializeResponses() {
-	clickMultiplierResponses := map[int]string{
-		0: "Your click multiplier feels... meaningless somehow.",
-		3: "More clicks per click. What a profound achievement.",
-		6: "Clicking harder. Is that really progress?",
-	}
+    clickMultiplierResponses := map[int]string{
+        0: "你的点击倍增器……好像也没那么有意义。",
+        3: "每次点击变多了，真是深刻的成就呢。",
+        6: "更用力地点击，这算是进步吗？",
+    }
 
-	autoClickerResponses := map[int]string{
-		1: "An auto-clicker. Because clicking manually is too much effort.",
-		4: "Automation for your automation. How meta.",
-		7: "The machine clicks for you. Are you still playing?",
-	}
+    autoClickerResponses := map[int]string{
+        1: "自动点击器？看来手动已经不配了。",
+        4: "给自动化再来点自动化，太元了。",
+        7: "机器替你点了，你还在玩吗？",
+    }
 
-	abstractMemeResponses := map[int]string{
-		2: "You bought an abstract meme. The void is pleased.",
-		5: "A digital concept. You can't even hold it.",
-		8: "Consuming pixels. Modern life.",
-	}
+    abstractMemeResponses := map[int]string{
+        2: "你买了一个抽象梗，虚空很满意。",
+        5: "一个数字概念，你甚至摸不到它。",
+        8: "消费像素，现代人的浪漫。",
+    }
 
 	for id, response := range clickMultiplierResponses {
 		rs.responses[id] = response
