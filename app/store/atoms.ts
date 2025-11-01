@@ -59,11 +59,11 @@ export const shopItemsAtom = atom<ShopItemData[]>([
     name: '点击倍增器',
     description: '使每次点击获得更多点数',
     price: 50,
-    effect: '点击 +1',
+    effect: '点击 x1',
     icon: '✨',
     level: 1,
     repeatable: true,
-    currentLevel: 1,
+    currentLevel: 0,
     maxLevel: 5,
     stageThreshold: 5
   },

@@ -21,6 +21,7 @@ import {
 } from '../store/atoms';
 import ShopItem, { ShopItemData } from './ShopItem';
 import { handleItemPurchase } from '../utils/purchaseHandler';
+import { getMultiplierValue } from '../utils/multiplierConfig';
 import { sendPurchaseEvent } from '../utils/websocketClient';
 
 export default function Shop() {
@@ -53,8 +54,8 @@ export default function Shop() {
         ? Math.min((item.currentLevel ?? 0) + 1, item.maxLevel ?? (item.currentLevel ?? 0) + 1)
         : null;
     const nextClickMultiplier =
-      item.id === 'multiplier'
-        ? nextLevel ?? clickMultiplierValue
+      item.id === 'multiplier' && nextLevel !== null
+        ? getMultiplierValue(nextLevel)
         : clickMultiplierValue;
     const nextStage = Math.max(0, stage - item.price);
 

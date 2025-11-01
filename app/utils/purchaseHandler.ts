@@ -5,6 +5,12 @@
 
 import { ShopItemData } from "../components/ShopItem";
 import { setPageMetaByItemId } from "./faviconManager";
+import {
+  formatMultiplierEffect,
+  getMultiplierValue,
+  getNextMultiplierPrice,
+  MAX_MULTIPLIER_LEVEL,
+} from "./multiplierConfig";
 
 /**
  * 购买行为的上下文
@@ -46,15 +52,17 @@ function hideItem(
 function handleMultiplierPurchase(context: PurchaseContext): void {
   const { item, setShopItems, setClickMultiplier } = context;
 
-  const currentLevel = item.currentLevel || 1;
-  const maxLevel = item.maxLevel || 5;
+  const currentLevel = item.currentLevel ?? 0;
+  const maxLevel = item.maxLevel ?? MAX_MULTIPLIER_LEVEL;
 
   if (currentLevel < maxLevel) {
     const newLevel = currentLevel + 1;
+    const multiplierValue = getMultiplierValue(newLevel);
+    const nextPrice = getNextMultiplierPrice(newLevel);
 
     // 更新倍数
     if (setClickMultiplier) {
-      setClickMultiplier(newLevel);
+      setClickMultiplier(multiplierValue);
     }
 
     // 更新 item 的等级和价格
@@ -64,8 +72,8 @@ function handleMultiplierPurchase(context: PurchaseContext): void {
           ? {
               ...i,
               currentLevel: newLevel,
-              price: 50 * newLevel, // 价格递增：50, 100, 150, 200, 250
-              effect: `点击 +${newLevel}`,
+              price: nextPrice ?? i.price,
+              effect: formatMultiplierEffect(newLevel),
               // 达到最大等级时隐藏
               hidden: newLevel >= maxLevel,
             }
@@ -73,7 +81,9 @@ function handleMultiplierPurchase(context: PurchaseContext): void {
       )
     );
 
-    console.log(`✅ 购买了: ${item.name}，当前等级: ${newLevel}/${maxLevel}`);
+    console.log(
+      `✅ 购买了: ${item.name}，倍率已提升至 x${multiplierValue}（等级 ${newLevel}/${maxLevel}）`
+    );
 
     if (newLevel >= maxLevel) {
       console.log(`🎉 ${item.name} 已达到最大等级，物品已隐藏`);
