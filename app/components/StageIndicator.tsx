@@ -16,7 +16,7 @@ import {
 } from '../utils/levelSystem';
 
 const FINAL_STAGE_THRESHOLD = 3000;
-const FINAL_VIDEO_DELAY_MS = 1200;
+const FINAL_VIDEO_DELAY_MS = 3200;
 
 export default function StageIndicator() {
   const stage = useAtomValue(stageAtom);
@@ -66,18 +66,18 @@ export default function StageIndicator() {
   const levelText = getLevelText(level);
 
   const containerClassName = finaleMode
-    ? 'fixed inset-0 z-[12000] transition-all duration-1000 ease-in-out pointer-events-none flex items-center justify-center'
-    : 'fixed top-4 left-1/2 -translate-x-1/2 z-[12000] transition-all duration-500 ease-out pointer-events-none';
+    ? 'fixed inset-0 z-[12000] transition-all duration-[3200ms] ease-in-out pointer-events-none flex items-center justify-center'
+    : 'fixed top-4 left-1/2 -translate-x-1/2 z-[12000] transition-all duration-700 ease-out pointer-events-none';
 
   const panelClassName = finaleMode
-    ? 'relative flex flex-col items-center justify-center w-screen h-screen bg-black rounded-none border-none shadow-none pointer-events-auto overflow-hidden transition-all duration-1000 ease-in-out'
-    : 'relative flex flex-col items-center justify-center bg-white rounded-full shadow-xl border-2 border-gray-300 px-6 py-3 min-w-80 pointer-events-auto overflow-hidden transition-all duration-500 ease-out';
+    ? 'relative flex flex-col items-center justify-center w-screen h-screen bg-white text-gray-900 rounded-none border-none shadow-none pointer-events-auto overflow-hidden transition-all duration-[3200ms] ease-in-out'
+    : 'relative flex flex-col items-center justify-center bg-white rounded-full shadow-xl border-2 border-gray-300 px-6 py-3 min-w-80 pointer-events-auto overflow-hidden transition-all duration-700 ease-out';
 
   return (
     <div className={containerClassName}>
       <div className={panelClassName}>
         <div
-          className={`relative z-10 w-full max-w-md transition-opacity duration-700 ease-in-out ${
+          className={`relative z-10 w-full max-w-md transition-opacity duration-[1800ms] ease-in-out ${
             showFinalVideo ? 'opacity-0 pointer-events-none' : 'opacity-100'
           }`}
         >
@@ -111,7 +111,7 @@ export default function StageIndicator() {
         </div>
 
         <div
-          className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
+          className={`absolute inset-0 bg-black transition-opacity duration-[2000ms] ease-in-out ${
             showFinalVideo ? 'opacity-100' : 'opacity-0 pointer-events-none'
           }`}
         >

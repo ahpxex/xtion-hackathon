@@ -1,5 +1,10 @@
 import { ToastData } from '../store/atoms';
 
+export interface ToastOptions {
+  duration?: number;
+  showIcon?: boolean;
+}
+
 /**
  * 生成唯一的 toast ID
  */
@@ -19,14 +24,16 @@ export function addToast(
   toasts: ToastData[],
   message: string,
   type: 'info' | 'success' | 'warning' | 'error' = 'info',
-  duration: number = 3000
+  options: ToastOptions = {}
 ): { toasts: ToastData[]; id: string } {
   const id = generateToastId();
+  const { duration = 3000, showIcon = true } = options;
   const newToast: ToastData = {
     id,
     message,
     type,
     duration,
+    showIcon,
   };
   return {
     toasts: [...toasts, newToast],
@@ -58,9 +65,12 @@ export function clearAllToasts(): ToastData[] {
 export function createInfoToast(
   toasts: ToastData[],
   message: string,
-  duration?: number
+  durationOrOptions?: number | ToastOptions
 ) {
-  return addToast(toasts, message, 'info', duration);
+  if (typeof durationOrOptions === 'number') {
+    return addToast(toasts, message, 'info', { duration: durationOrOptions });
+  }
+  return addToast(toasts, message, 'info', durationOrOptions);
 }
 
 /**
@@ -69,9 +79,12 @@ export function createInfoToast(
 export function createSuccessToast(
   toasts: ToastData[],
   message: string,
-  duration?: number
+  durationOrOptions?: number | ToastOptions
 ) {
-  return addToast(toasts, message, 'success', duration);
+  if (typeof durationOrOptions === 'number') {
+    return addToast(toasts, message, 'success', { duration: durationOrOptions });
+  }
+  return addToast(toasts, message, 'success', durationOrOptions);
 }
 
 /**
@@ -80,9 +93,12 @@ export function createSuccessToast(
 export function createWarningToast(
   toasts: ToastData[],
   message: string,
-  duration?: number
+  durationOrOptions?: number | ToastOptions
 ) {
-  return addToast(toasts, message, 'warning', duration);
+  if (typeof durationOrOptions === 'number') {
+    return addToast(toasts, message, 'warning', { duration: durationOrOptions });
+  }
+  return addToast(toasts, message, 'warning', durationOrOptions);
 }
 
 /**
@@ -91,7 +107,10 @@ export function createWarningToast(
 export function createErrorToast(
   toasts: ToastData[],
   message: string,
-  duration?: number
+  durationOrOptions?: number | ToastOptions
 ) {
-  return addToast(toasts, message, 'error', duration);
+  if (typeof durationOrOptions === 'number') {
+    return addToast(toasts, message, 'error', { duration: durationOrOptions });
+  }
+  return addToast(toasts, message, 'error', durationOrOptions);
 }

@@ -37,6 +37,7 @@ const Toast = ({ toast }: ToastProps) => {
     warning: '⚠️',
     error: '❌',
   };
+  const shouldShowIcon = toast.showIcon !== false;
 
   return (
     <div
@@ -47,7 +48,9 @@ const Toast = ({ toast }: ToastProps) => {
         animate-slide-in-up
       `}
     >
-      <span className="text-xl">{typeIcons[toast.type]}</span>
+      {shouldShowIcon && (
+        <span className="text-xl">{typeIcons[toast.type]}</span>
+      )}
       <span className="flex-1 text-sm font-medium">{toast.message}</span>
       <button
         onClick={handleClose}

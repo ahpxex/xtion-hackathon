@@ -89,7 +89,8 @@ export default function FloatingPanel({ defaultPosition }: FloatingPanelProps) {
       const toastType = deriveToastType(state);
 
       setToasts(
-        (prevToasts) => addToast(prevToasts, toastText, toastType).toasts
+        (prevToasts) =>
+          addToast(prevToasts, toastText, toastType, { showIcon: false }).toasts
       );
     });
 

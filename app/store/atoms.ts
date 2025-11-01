@@ -6,6 +6,7 @@ export interface ToastData {
   message: string;
   type: 'info' | 'success' | 'warning' | 'error';
   duration?: number; // 显示时长（毫秒），默认 3000
+  showIcon?: boolean; // 是否显示前置图标
 }
 
 export interface LeaderboardEntry {
@@ -71,7 +72,7 @@ export const shopItemsAtom = atom<ShopItemData[]>([
     name: '点数工厂',
     description: '大幅提升自动生产效率',
     price: 200,
-    effect: '每秒 +0',
+    effect: '每3秒 +0',
     icon: '🏭',
     level: 2,
     repeatable: true,

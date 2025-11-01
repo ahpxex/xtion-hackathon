@@ -204,7 +204,7 @@ function handleFactoryPurchase(context: PurchaseContext): void {
         ...i,
         currentLevel: updatedLevel,
         price: isMax ? i.price : 200 + updatedLevel * 150,
-        effect: `每秒 +${updatedLevel * incomePerLevel}`,
+        effect: `每3秒 +${updatedLevel * incomePerLevel}`,
         hidden: isMax,
       };
     })
