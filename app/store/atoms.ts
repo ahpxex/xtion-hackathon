@@ -33,6 +33,7 @@ export const showFloatingPanelAtom = atom(false); // 是否显示 AI 功能
 export const showLeaderboardAtom = atom(false); // 是否显示排行榜
 export const fancyButtonAtom = atom(false); // 是否启用炫酷按钮
 export const showAbstractVideoAtom = atom(false); // 是否显示终局视频
+export const finaleModeAtom = atom(false); // 是否进入终局模式
 export const factoryLevelAtom = atom(0); // 点数工厂等级
 export const bonusLevelAtom = atom(0); // 幸运硬币等级
 export const displayUpgradeLevelAtom = atom(0); // 点数显示器升级等级
