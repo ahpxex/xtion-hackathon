@@ -179,12 +179,12 @@ export const shopItemsAtom = atom<ShopItemData[]>([
     id: 'ai-panel',
     name: 'AI 功能',
     description: '启用智能助手和通知系统',
-    price: 300,
+    price: 60,
     effect: '显示 AI 面板',
     icon: '🤖',
-    level: 3,
+    level: 1,
     repeatable: false,
-    stageThreshold: 200
+    stageThreshold: 20
   },
   {
     id: 'rocket',

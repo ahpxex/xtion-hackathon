@@ -220,10 +220,10 @@ export default function FloatingPanel({ defaultPosition }: FloatingPanelProps) {
       >
         {/* 通知图标 */}
         <div className="relative">
-          <Bell size={36} className="text-white" strokeWidth={2} />
+          <Bell size={32} className="text-white" strokeWidth={2.5} />
           {/* 通知数量徽章 */}
           {toasts.length > 0 && (
-            <div className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center animate-pulse">
+            <div className="absolute text-2xl -top-2 -right-2 bg-red-500 text-white font-bold rounded-full w-7 h-7 flex items-center justify-center animate-pulse">
               {toasts.length}
             </div>
           )}
