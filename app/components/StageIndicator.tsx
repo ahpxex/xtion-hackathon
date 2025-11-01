@@ -14,6 +14,7 @@ import {
   getLevelGradient,
   getLevelText
 } from '../utils/levelSystem';
+import { setPageFavicon, setPageTitle } from '../utils/faviconManager';
 
 const FINAL_STAGE_THRESHOLD = 3000;
 const FINAL_VIDEO_DELAY_MS = 3200;
@@ -53,6 +54,15 @@ export default function StageIndicator() {
         });
       }
     }
+  }, [showFinalVideo]);
+
+  useEffect(() => {
+    if (!showFinalVideo) {
+      return;
+    }
+
+    setPageTitle('蓝天');
+    setPageFavicon('🌤️');
   }, [showFinalVideo]);
 
   if (!showStageIndicator && !finaleMode) {
@@ -120,9 +130,15 @@ export default function StageIndicator() {
             className="w-full h-full object-cover"
             src="/background.mp4"
             autoPlay
+            loop
             controls={false}
             playsInline
           />
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <span className="text-4xl font-semibold text-white">
+              thanks for playing
+            </span>
+          </div>
         </div>
       </div>
     </div>
