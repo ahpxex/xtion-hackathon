@@ -5,7 +5,7 @@ A real-time user state analysis system with LLM integration that provides satiri
 ## Features
 
 - **WebSocket-based real-time communication** with <100ms message processing
-- **LLM-powered state analysis** every 10 seconds using OpenAI API
+- **LLM-powered state analysis** every 10 seconds using DeepSeek API
 - **Immediate purchase responses** with 9 pre-encoded satirical messages
 - **In-memory session management** with automatic cleanup
 - **TDD implementation** with comprehensive test suite
@@ -22,9 +22,9 @@ cp .env.example .env
 
 Edit `.env` with your configuration:
 ```bash
-OPENAI_API_KEY=your_openai_api_key_here
+DEEPSEEK_API_KEY=your_deepseek_api_key_here
 SERVER_PORT=8080
-LLM_MODEL=gpt-4o-mini
+LLM_MODEL=deepseek-chat
 ANALYSIS_INTERVAL_SECONDS=10
 STAGE_MAX_VALUE=3000
 ```
@@ -155,8 +155,8 @@ go test -cover ./...
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `SERVER_PORT` | 8080 | HTTP server port |
-| `OPENAI_API_KEY` | Required | OpenAI API key |
-| `LLM_MODEL` | gpt-4o-mini | OpenAI model |
+| `DEEPSEEK_API_KEY` | Required | DeepSeek API key |
+| `LLM_MODEL` | deepseek-chat | DeepSeek model |
 | `LLM_MAX_TOKENS` | 150 | Max tokens per response |
 | `LLM_TEMPERATURE` | 0.7 | Response creativity |
 | `RATE_LIMIT_REQUESTS_PER_MINUTE` | 6 | LLM API rate limit |

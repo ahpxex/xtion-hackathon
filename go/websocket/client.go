@@ -5,8 +5,8 @@ import (
 	"log"
 	"time"
 
-	"github.com/gorilla/websocket"
 	"github.com/ahpxex/xtion-hackathon/game"
+	"github.com/gorilla/websocket"
 )
 
 const (
@@ -59,14 +59,13 @@ func (c *Client) readPump() {
 			break
 		}
 
-		message, err := c.hub.messageHandler.ParseMessage(messageBytes)
+		msg, err := c.hub.messageHandler.ParseMessage(messageBytes)
 		if err != nil {
 			log.Printf("Message parsing error for client %s: %v", c.sessionID, err)
-			c.hub.sendError(c, "invalid_message", err.Error())
 			continue
 		}
 
-		c.hub.handleClientMessage(c, message)
+		c.hub.handleClientMessage(c, msg)
 	}
 }
 
@@ -137,8 +136,6 @@ func (c *Client) Close() {
 		c.conn.Close()
 	}
 
-	close(c.send)
-
 	log.Printf("Client %s connection closed", c.sessionID)
 }
 
@@ -172,13 +169,8 @@ func (c *Client) SendMessage(message interface{}) error {
 	}
 }
 
-func (c *Client) SendError(code, message string) error {
-	errorMsg := c.hub.messageHandler.CreateError(code, message)
-	return c.SendMessage(errorMsg)
-}
-
-func (c *Client) SendResponse(state, message, code string) error {
-	respMsg := c.hub.messageHandler.CreateResponse(state, message, code)
+func (c *Client) SendResponse(state, message string) error {
+	respMsg := c.hub.messageHandler.CreateResponse(state, message)
 	return c.SendMessage(respMsg)
 }
 

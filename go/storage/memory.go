@@ -10,11 +10,11 @@ import (
 )
 
 type MemoryStore struct {
-	sessions    map[string]*game.SessionData
-	stateManager *game.StateManager
-	mu          sync.RWMutex
+	sessions      map[string]*game.SessionData
+	stateManager  *game.StateManager
+	mu            sync.RWMutex
 	cleanupTicker *time.Ticker
-	stopCleanup chan struct{}
+	stopCleanup   chan struct{}
 }
 
 func NewMemoryStore(historySize int) *MemoryStore {
@@ -146,46 +146,6 @@ func (ms *MemoryStore) CleanupInactiveSessions(timeout time.Duration) int {
 	return deleted
 }
 
-func (ms *MemoryStore) GetSessionStats() map[string]interface{} {
-	ms.mu.RLock()
-	defer ms.mu.RUnlock()
-
-	stats := map[string]interface{}{
-		"total_sessions":      len(ms.sessions),
-		"active_sessions_5m":  ms.GetActiveSessionsCount(5 * time.Minute),
-		"active_sessions_1h":  ms.GetActiveSessionsCount(1 * time.Hour),
-		"last_cleanup":        time.Now().Format(time.RFC3339),
-	}
-
-	totalPurchases := 0
-	totalLLMResponses := 0
-	totalStage := 0
-	totalClicks := 0
-
-	for _, session := range ms.sessions {
-		totalPurchases += len(session.ItemPurchases)
-		totalLLMResponses += len(session.LLMResponses)
-		
-		userState := session.GetUserState()
-		totalStage += userState.Stage
-		totalClicks += userState.Clicks
-	}
-
-	stats["total_purchases"] = totalPurchases
-	stats["total_llm_responses"] = totalLLMResponses
-	stats["total_stage_progress"] = totalStage
-	stats["total_clicks"] = totalClicks
-
-	if len(ms.sessions) > 0 {
-		stats["avg_stage"] = totalStage / len(ms.sessions)
-		stats["avg_clicks"] = totalClicks / len(ms.sessions)
-		stats["avg_purchases"] = float64(totalPurchases) / float64(len(ms.sessions))
-		stats["avg_llm_responses"] = float64(totalLLMResponses) / float64(len(ms.sessions))
-	}
-
-	return stats
-}
-
 func (ms *MemoryStore) ExportSessionData(sessionID string) (map[string]interface{}, error) {
 	ms.mu.RLock()
 	defer ms.mu.RUnlock()
@@ -196,23 +156,23 @@ func (ms *MemoryStore) ExportSessionData(sessionID string) (map[string]interface
 	}
 
 	userState := session.GetUserState()
-	
+
 	data := map[string]interface{}{
-		"session_id":        session.ID,
-		"current_state":     session.CurrentState,
-		"last_analysis":     session.LastAnalysis,
-		"created_at":        session.CreatedAt,
-		"last_activity":     session.LastActivity,
-		"stage_history":     session.StageHistory,
-		"clicks_history":    session.ClicksHistory,
-		"item_purchases":    session.ItemPurchases,
-		"llm_responses":     session.LLMResponses,
-		"total_purchases":   len(session.ItemPurchases),
-		"total_responses":   len(session.LLMResponses),
-		"current_stage":     userState.Stage,
-		"current_clicks":    userState.Clicks,
-		"engagement_rate":   userState.EngagementRate,
-		"is_active":         session.IsActive(5 * time.Minute),
+		"session_id":      session.ID,
+		"current_state":   session.CurrentState,
+		"last_analysis":   session.LastAnalysis,
+		"created_at":      session.CreatedAt,
+		"last_activity":   session.LastActivity,
+		"stage_history":   session.StageHistory,
+		"clicks_history":  session.ClicksHistory,
+		"item_purchases":  session.ItemPurchases,
+		"llm_responses":   session.LLMResponses,
+		"total_purchases": len(session.ItemPurchases),
+		"total_responses": len(session.LLMResponses),
+		"current_stage":   userState.Stage,
+		"current_clicks":  userState.Clicks,
+		"engagement_rate": userState.EngagementRate,
+		"is_active":       session.IsActive(5 * time.Minute),
 	}
 
 	return data, nil

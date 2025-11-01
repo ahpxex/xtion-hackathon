@@ -1,15 +1,16 @@
 package websocket
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"sync"
 	"time"
 
-	"github.com/gorilla/websocket"
 	"github.com/ahpxex/xtion-hackathon/config"
 	"github.com/ahpxex/xtion-hackathon/game"
 	"github.com/ahpxex/xtion-hackathon/llm"
+	"github.com/gorilla/websocket"
 )
 
 var upgrader = websocket.Upgrader{
@@ -21,26 +22,14 @@ var upgrader = websocket.Upgrader{
 }
 
 type Hub struct {
-	clients         map[*Client]bool
-	register        chan *Client
-	unregister      chan *Client
-	messageHandler  *MessageHandler
-	stateManager    *game.StateManager
-	analyzer        *llm.StateAnalyzer
-	cfg             *config.Config
-	mu              sync.RWMutex
-	metrics         *HubMetrics
-}
-
-type HubMetrics struct {
-	ConnectionsTotal   int64     `json:"connections_total"`
-	ConnectionsActive  int64     `json:"connections_active"`
-	MessagesReceived   int64     `json:"messages_received"`
-	MessagesSent       int64     `json:"messages_sent"`
-	AnalysesTriggered  int64     `json:"analyses_triggered"`
-	LLMResponsesSent   int64     `json:"llm_responses_sent"`
-	LastActivity       time.Time `json:"last_activity"`
-	mu                sync.RWMutex
+	clients        map[*Client]bool
+	register       chan *Client
+	unregister     chan *Client
+	messageHandler *MessageHandler
+	stateManager   *game.StateManager
+	analyzer       *llm.StateAnalyzer
+	cfg            *config.Config
+	mu             sync.RWMutex
 }
 
 func NewHub(cfg *config.Config, stateManager *game.StateManager, analyzer *llm.StateAnalyzer) *Hub {
@@ -52,19 +41,13 @@ func NewHub(cfg *config.Config, stateManager *game.StateManager, analyzer *llm.S
 		stateManager:   stateManager,
 		analyzer:       analyzer,
 		cfg:            cfg,
-		metrics: &HubMetrics{
-			LastActivity: time.Now(),
-		},
 	}
 }
 
 func (h *Hub) Run() {
 	log.Println("WebSocket hub started")
 
-	for result := range h.analyzer.GetResults() {
-		h.handleAnalysisResult(result)
-	}
-
+	// Process analyzer results and client register/unregister concurrently
 	for {
 		select {
 		case client := <-h.register:
@@ -72,6 +55,9 @@ func (h *Hub) Run() {
 
 		case client := <-h.unregister:
 			h.unregisterClient(client)
+
+		case result := <-h.analyzer.GetResults():
+			h.handleAnalysisResult(result)
 		}
 	}
 }
@@ -86,10 +72,12 @@ func (h *Hub) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	sessionID := generateSessionID()
 	client := NewClient(conn, sessionID, h)
 
+	// Register the client first so session exists before any messages are processed
+	h.registerClient(client)
+
+	// Then start read/write pumps
 	go client.writePump()
 	go client.readPump()
-
-	h.register <- client
 }
 
 func (h *Hub) registerClient(client *Client) {
@@ -97,20 +85,9 @@ func (h *Hub) registerClient(client *Client) {
 	defer h.mu.Unlock()
 
 	h.clients[client] = true
-	
+
 	session := h.stateManager.CreateSession(client.sessionID)
 	client.sessionData = session
-
-	h.metrics.mu.Lock()
-	h.metrics.ConnectionsTotal++
-	h.metrics.ConnectionsActive++
-	h.metrics.LastActivity = time.Now()
-	h.metrics.mu.Unlock()
-
-	log.Printf("Client connected: %s (total: %d, active: %d)", 
-		client.sessionID, h.metrics.ConnectionsTotal, h.metrics.ConnectionsActive)
-
-	h.broadcastClientInfo(client, "connected")
 }
 
 func (h *Hub) unregisterClient(client *Client) {
@@ -124,74 +101,66 @@ func (h *Hub) unregisterClient(client *Client) {
 		if client.sessionID != "" {
 			h.stateManager.DeleteSession(client.sessionID)
 		}
-
-		h.metrics.mu.Lock()
-		h.metrics.ConnectionsActive--
-		h.metrics.LastActivity = time.Now()
-		h.metrics.mu.Unlock()
-
-		log.Printf("Client disconnected: %s (active: %d)", client.sessionID, h.metrics.ConnectionsActive)
 	}
 }
 
-func (h *Hub) handleClientMessage(client *Client, message interface{}) {
-	h.metrics.mu.Lock()
-	h.metrics.MessagesReceived++
-	h.metrics.LastActivity = time.Now()
-	h.metrics.mu.Unlock()
-
-	switch msg := message.(type) {
-	case *UserActionMessage:
+func (h *Hub) handleClientMessage(client *Client, msg *ClientMessage) {
+	switch msg.Type {
+	case "user_action":
 		h.handleUserAction(client, msg)
-	case *PurchaseMessage:
+	case "purchase":
 		h.handlePurchase(client, msg)
 	default:
-		log.Printf("Unknown message type from client %s: %T", client.sessionID, message)
+		log.Printf("Unknown message type from client %s: %s", client.sessionID, msg.Type)
 	}
 }
 
-func (h *Hub) handleUserAction(client *Client, msg *UserActionMessage) {
+func (h *Hub) handleUserAction(client *Client, msg *ClientMessage) {
 	if err := h.messageHandler.ValidateUserAction(msg); err != nil {
-		h.sendError(client, "invalid_user_action", err.Error())
+		log.Printf("Validation error for client %s: %v", client.sessionID, err)
+		h.sendErr(client, err)
 		return
 	}
 
 	session, err := h.stateManager.UpdateSessionState(client.sessionID, msg.Stage, msg.Clicks)
 	if err != nil {
-		h.sendError(client, "session_error", err.Error())
+		h.sendErr(client, err)
 		return
 	}
 
 	client.sessionData = session
+
+	// 立即返回一个响应，确保客户端在 user_action 后能读到消息
+	ack := h.messageHandler.CreateResponse(
+		"USER_STATE_UPDATED",
+		fmt.Sprintf("state updated: stage=%d, clicks=%d", msg.Stage, msg.Clicks),
+	)
+	h.sendMessage(client, ack)
 
 	if h.analyzer.IsRunning() {
 		userState := session.GetUserState()
 		recentActions := session.GetRecentActions(h.cfg.HistoryWindowSize)
 
 		req := &llm.AnalysisRequest{
-			SessionID:    client.sessionID,
-			UserState:    userState,
+			SessionID:     client.sessionID,
+			UserState:     userState,
 			RecentActions: recentActions,
-			Timestamp:    time.Now(),
+			Timestamp:     time.Now(),
 		}
 
 		h.analyzer.QueueAnalysis(req)
-
-		h.metrics.mu.Lock()
-		h.metrics.AnalysesTriggered++
-		h.metrics.mu.Unlock()
 	}
 }
 
-func (h *Hub) handlePurchase(client *Client, msg *PurchaseMessage) {
-	if err := h.messageHandler.ValidatePurchase(msg); err != nil {
-		h.sendError(client, "invalid_purchase", err.Error())
-		return
-	}
+func (h *Hub) handlePurchase(client *Client, msg *ClientMessage) {
 
 	err := h.stateManager.AddSessionPurchase(client.sessionID, msg.ItemID)
 	if err != nil {
-		h.sendError(client, "session_error", err.Error())
+		respMsg := h.messageHandler.CreateResponse(
+			"PURCHASE_RESPONSE",
+			err.Error(),
+		)
+		h.sendMessage(client, respMsg)
 		return
 	}
 
@@ -199,13 +168,11 @@ func (h *Hub) handlePurchase(client *Client, msg *PurchaseMessage) {
 		client.sessionData.AddPurchase(msg.ItemID)
 	}
 
-	category := getPurchaseCategory(msg.ItemID)
 	response := getEncodedResponse(msg.ItemID)
 
 	respMsg := h.messageHandler.CreateResponse(
-		category,
-		response,
 		"PURCHASE_RESPONSE",
+		response,
 	)
 
 	h.sendMessage(client, respMsg)
@@ -232,7 +199,7 @@ func (h *Hub) handleAnalysisResult(result *llm.AnalysisResult) {
 			session.AddLLMResponse(result.Response.Message)
 		}
 
-			currentState := result.PreviousState
+		currentState := result.PreviousState
 		if result.Response.NewState != "" {
 			currentState = result.Response.NewState
 		}
@@ -240,14 +207,9 @@ func (h *Hub) handleAnalysisResult(result *llm.AnalysisResult) {
 		respMsg := h.messageHandler.CreateResponse(
 			currentState,
 			result.Response.Message,
-			"LLM_ANALYSIS",
 		)
 
 		h.sendMessage(client, respMsg)
-
-		h.metrics.mu.Lock()
-		h.metrics.LLMResponsesSent++
-		h.metrics.mu.Unlock()
 	}
 }
 
@@ -263,47 +225,27 @@ func (h *Hub) findClientBySessionID(sessionID string) (*Client, bool) {
 func (h *Hub) sendMessage(client *Client, message interface{}) {
 	select {
 	case client.send <- message:
-		h.metrics.mu.Lock()
-		h.metrics.MessagesSent++
-		h.metrics.LastActivity = time.Now()
-		h.metrics.mu.Unlock()
 	default:
 		log.Printf("Send buffer full for client %s, dropping message", client.sessionID)
 		client.Close()
 	}
 }
 
-func (h *Hub) sendError(client *Client, code, message string) {
-	errorMsg := h.messageHandler.CreateError(code, message)
-	h.sendMessage(client, errorMsg)
-}
-
 func (h *Hub) broadcastClientInfo(client *Client, action string) {
-	h.metrics.mu.RLock()
 	info := map[string]interface{}{
 		"type":       "client_info",
 		"action":     action,
 		"session_id": client.sessionID,
 		"timestamp":  time.Now().Unix(),
-		"metrics":    h.metrics,
 	}
-	h.metrics.mu.RUnlock()
 
 	h.sendMessage(client, info)
-}
-
-func (h *Hub) GetMetrics() *HubMetrics {
-	h.metrics.mu.RLock()
-	defer h.metrics.mu.RUnlock()
-
-	metricsCopy := *h.metrics
-	return &metricsCopy
 }
 
 func (h *Hub) CleanupInactiveSessions() {
 	timeout := 5 * time.Minute
 	deleted := h.stateManager.CleanupInactiveSessions(timeout)
-	
+
 	h.mu.Lock()
 	for client := range h.clients {
 		if client.sessionData != nil && !client.sessionData.IsActive(timeout) {
@@ -350,7 +292,15 @@ func getEncodedResponse(itemID int) string {
 }
 
 func generateSessionID() string {
-	return time.Now().Format("20060102-150405") + "-" + 
-		string(rune(time.Now().UnixNano()%26+65)) + 
+	return time.Now().Format("20060102-150405") + "-" +
+		string(rune(time.Now().UnixNano()%26+65)) +
 		string(rune((time.Now().UnixNano()/1000)%26+65))
+}
+
+func (h *Hub) sendErr(client *Client, err error) {
+	respMsg := h.messageHandler.CreateResponse(
+		"PURCHASE_RESPONSE",
+		err.Error(),
+	)
+	h.sendMessage(client, respMsg)
 }
