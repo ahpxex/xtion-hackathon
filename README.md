@@ -1,36 +1,108 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Expoint：一场存在主义点击实验（xtion-hackathon）
 
-## Getting Started
+Expoint 是一款将“结构文化”与“无意义行为”并置的互动体验：你点击、你升级、你购买、更高的阶段、更多的排名——而一个讽刺又温柔的“观察者”会在关键节点以一句话介入，轻轻地把你从数字虚荣中拉回现实。这场体验的目标不是让你更沉迷，而是让你在沉迷中生出一丝觉察：生命中更重要的事情，往往不在屏幕里。
 
-First, run the development server:
+——当系统每 10 秒评估一次你的状态、在真正发生变化的瞬间才说话；当购物的诱惑以温柔的概率出现；当你逐渐从“更快更强”转为“为什么要更快更强”——你会发现，机制的意义是让你看见无意义，然后选择离开。
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+如果你只想知道这个项目的意义与价值：它是一面镜子，映照平台的结构、指标的压力、行为的惯性，最后把选择权还给“你”。
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 项目亮点
+- 存在主义叙事：以点击与排行榜制造“成就感”，再用 AI 的一句话拆解这种成就的空洞。
+- 双层消息系统：固定行为触发与 LLM 状态介入并存，既可靠又具情感张力。
+- 状态机驱动：仅在状态真正变化时推送，避免噪音，保留关键时刻的说服力。
+- 反指标语言：观察者的信息只有一句中文，使用逆反或陪伴语气，不提数字、不谈点击、不谈阶段。
+- 伦理价值：通过“无意义的强化”引发“有意义的反思”，鼓励把注意力放回生活。
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 我们为什么做这件事
+- 结构文化让我们在平台中“按规则参与”：多点、更快、更高，指标持续增长。
+- 无意义行为却让人逐步麻木：点击、升级、购买，短暂的满足覆盖了长期的空虚。
+- Expoint 不否认机制的快感，而是以机制为镜，设计一个“觉察的坡道”：当你从“投入”走到“分心”，从“焦虑”走到“决断”，你会在关键节点听到一句话，提醒你可以停下来。
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 价值主张
+- 情绪旅程工程：初始投入 → 竞争焦虑 → 升级痴迷 → 高潮混乱 → 哲学落点。
+- 真实时序：后端每秒接收状态，LLM 每 10 秒评估并仅在变更时介入，信息更可信。
+- 内容安全与多样性：单句中文信息、反指标、不重复固定句式，避免“信息疲劳”。
+- 温柔的诱导：当点击与阶段高且相近时，以约 30% 概率轻轻建议“要不要试试商店里的东西？”——不是强推，是给你一个自我观察的机会。
+- 开放式结局：最高阶段并非终点，真正的终点是你决定暂时离开，去做重要的事。
 
-## Learn More
+## 架构总览
+- 前端（Next.js）
+  - `app/components/*`：点击区、商店、排行榜、提示与浮层。
+  - `app/utils/websocketClient.ts`：与后端 WebSocket 通道通信。
+- 后端（Go）
+  - `websocket/hub.go`：集中管理连接与消息分发。
+  - `llm/analyzer.go`：合并用户行为、每 10 秒批处理并仅在状态改变时触发 LLM。
+  - `llm/deepseek_client.go`：系统与用户提示词、响应校验；输出一条中文句子，逆反或陪伴语气，不含指标与数字。
+  - `game/responses.go`：购买与升级的固定文案（已中文化）。
+  - `config/config.go`：环境变量与约束（端口、速率限制、LLM 模型、分析周期等）。
+  - `main.go`：启动 HTTP 与 WebSocket 服务（默认 `:8080`）。
 
-To learn more about Next.js, take a look at the following resources:
+## 关键机制
+- 请求合并与节流：用户动作被收集到内存队列，避免“响应风暴”。
+- 分析时钟：每 10 秒触发 LLM 评估（`ANALYSIS_INTERVAL_SECONDS` 可配置）。
+- 状态变更判断：仅当 LLM 给出的 `new_state` 与前一状态不同才推送。
+- 信息风格：单句、中文、逆反/陪伴、≤120 字、不含数字与技术词（如点击、阶段、参与度）。
+- 多样性与过滤：鼓励多样句式，避免重复短语；服务端对输出进行长度与敏感词校验。
+- 购买诱导的概率性：当点击与阶段高且相近时，约 30% 概率给出轻微建议，但绝不出现数字或指标。
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 安装与运行
+- 后端
+  - 环境变量（示例）：
+    - `SERVER_PORT=8080`
+    - `DEEPSEEK_API_KEY=<你的密钥>`
+    - `LLM_MODEL=deepseek-chat`
+    - `LLM_MAX_TOKENS=150`
+    - `LLM_TEMPERATURE=0.7`
+    - `RATE_LIMIT_REQUESTS_PER_MINUTE=6`
+    - `ANALYSIS_INTERVAL_SECONDS=10`
+  - 进入 `go/` 目录编译与运行：
+    - `go build -o xtion-backend .`
+    - `./xtion-backend`
+  - 健康检查：`http://localhost:8080/health`
+  - WebSocket：`ws://localhost:8080/ws`
+- 前端
+  - `npm run dev` 或 `bun dev`，默认端口 `http://localhost:3000`
+  - 前端通过 `websocketClient.ts` 与后端 `/ws` 进行状态同步与消息接收。
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 体验路径（建议演示流程）
+- 开场：展示一个极简点击区与商店，讲述“多点一点就更好”的朴素直觉。
+- 升级：购买倍增器或自动点击器，成就感迅速增长。
+- 介入：在状态变化的关键节点，观察者用一句话“挑衅或陪伴”地提醒你：也许可以停一停。
+- 诱导：当系统检测到你“已经很高且很相近”，它会以温柔的概率建议“要不要试试商店里的东西？”让你观察自己——你会跟随吗？
+- 转折：你意识到“晋级的快感不会解决更大的问题”，选择在此刻暂停，转身去做真正重要的事。
 
-## Deploy on Vercel
+## 我们希望用户获得什么
+- 一次完整的情绪旅程，而不是持续的消费冲动。
+- 对平台结构与指标逻辑的直观理解：看见“为什么你会一直点下去”。
+- 对自我注意力的主权：在关键节点做出“暂停”的决定。
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 讲故事指南（产品展示话术）
+- 开场钩子：
+  - “这是一款能让你更快升级的点击游戏——也是一面镜子。”
+  - “我不劝你停下，我只在你改变时轻声提醒。”
+- 架构与节奏：
+  - 展示点击与商店，让观众直观感受“更快更强”的快感。
+  - 指出每 10 秒的状态评估与仅在变更时介入的设计，解释为什么信息不打扰但有力。
+  - 展示一两条观察者句子（逆反或陪伴），强调“不提数字、不谈点击”的风格。
+- 情绪推进：
+  - 让用户看到自己从“投入”走向“痴迷”的过程，再通过一句话完成觉察转折。
+  - 当系统给出轻微购买建议时，邀请用户自问：我为什么要买？是我需要，还是机制在推我？
+- 结尾落点：
+  - “你可以继续点，也可以现在就去做更重要的事。选择权在你。”
+  - 给出演讲后的即时行动建议（例如“关掉标签页，给重要的人发一条信息”）。
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 演示脚本（逐步）
+- Step 1：打开前端主页，解释极简设计与点击逻辑。
+- Step 2：点击并购买一两个物品（倍增器、自动点击器），展示反馈与中文文案。
+- Step 3：保持 10 秒节奏，等待观察者在状态变化时发出一句话；强调“仅在变更时说话”。
+- Step 4：若出现温柔购买建议，讨论“我选择跟随还是暂停”，引导观众思考。
+- Step 5：展示排行榜或更高阶段，但强调“更高不一定更好”，提出离开建议。
+
+## 致维护者与贡献者
+- 内容治理：确保 LLM 输出符合主题与伦理边界，避免重复与疲劳。
+- 性能与体验：保持每秒状态处理与 10 秒评估的时序，避免卡顿与噪音。
+- 主题一致性：任何改动都应服务于“让用户在机制中看见无意义，从而选择更有意义”的核心。
+
+## 许可证与声明
+- 本项目以体验与研究为目的，致力于公共叙事与注意力伦理的探索。
+- 请在演示与传播时强调：选择权属于用户，机制只是一面镜子。
