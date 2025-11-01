@@ -50,23 +50,23 @@ func (c *Client) readPump() {
 		return nil
 	})
 
-    for {
-        _, messageBytes, err := c.conn.ReadMessage()
-        if err != nil {
-            if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-                log.Printf("WebSocket error for client %s: %v", c.sessionID, err)
-            }
-            break
-        }
+	for {
+		_, messageBytes, err := c.conn.ReadMessage()
+		if err != nil {
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+				log.Printf("WebSocket error for client %s: %v", c.sessionID, err)
+			}
+			break
+		}
 
-        msg, err := c.hub.messageHandler.ParseMessage(messageBytes)
-        if err != nil {
-            log.Printf("Message parsing error for client %s: %v", c.sessionID, err)
-            continue
-        }
+		msg, err := c.hub.messageHandler.ParseMessage(messageBytes)
+		if err != nil {
+			log.Printf("Message parsing error for client %s: %v", c.sessionID, err)
+			continue
+		}
 
-        c.hub.handleClientMessage(c, msg)
-    }
+		c.hub.handleClientMessage(c, msg)
+	}
 }
 
 func (c *Client) writePump() {
@@ -89,6 +89,7 @@ func (c *Client) writePump() {
 				log.Printf("Write error for client %s: %v", c.sessionID, err)
 				return
 			}
+			time.Sleep(1 * time.Second)
 
 		case <-ticker.C:
 			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
@@ -123,20 +124,20 @@ func (c *Client) writeJSON(v interface{}) error {
 }
 
 func (c *Client) Close() {
-    if c.closed {
-        return
-    }
+	if c.closed {
+		return
+	}
 
-    c.closed = true
-    close(c.closeChan)
+	c.closed = true
+	close(c.closeChan)
 
-    if c.conn != nil {
-        c.conn.SetWriteDeadline(time.Now().Add(writeWait))
-        c.conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
-        c.conn.Close()
-    }
+	if c.conn != nil {
+		c.conn.SetWriteDeadline(time.Now().Add(writeWait))
+		c.conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
+		c.conn.Close()
+	}
 
-    log.Printf("Client %s connection closed", c.sessionID)
+	log.Printf("Client %s connection closed", c.sessionID)
 }
 
 func (c *Client) IsClosed() bool {
