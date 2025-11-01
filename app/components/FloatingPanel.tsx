@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useAtom } from "jotai";
 import { toastsAtom, showFloatingPanelAtom } from "../store/atoms";
 import Toast from "./Toast";
-import { Bell } from "lucide-react";
+import Image from "next/image";
 import { ServerMessage, subscribeToGameSocket } from "../utils/websocketClient";
 import { addToast } from "../utils/toastHelpers";
 
@@ -202,11 +202,11 @@ export default function FloatingPanel({ defaultPosition }: FloatingPanelProps) {
       {/* 圆形通知图标 */}
       <div
         ref={panelRef}
-        className={`fixed bg-gray-500 rounded-full shadow-2xl flex items-center justify-center z-[9998] ${
+        className={`fixed bg-transparent rounded-full flex items-center justify-center z-[9998] ${
           isDragging ? "cursor-grabbing" : "cursor-grab"
         } ${
           isAnimating ? "transition-all duration-300 ease-in-out" : ""
-        } hover:bg-gray-600`}
+        } `}
         style={{
           left: `${position.x}px`,
           top: `${position.y}px`,
@@ -216,8 +216,16 @@ export default function FloatingPanel({ defaultPosition }: FloatingPanelProps) {
         onMouseDown={handleMouseDown}
       >
         {/* 通知图标 */}
-        <div className="relative">
-          <Bell size={32} className="text-white" strokeWidth={2.5} />
+        <div className="relative flex items-center justify-center">
+          <Image
+            src="/moscot.png"
+            alt="AI 通知面板"
+            width={44}
+            height={44}
+            className="select-none pointer-events-none"
+            style={{ transform: "scaleX(-1)" }}
+            priority
+          />
           {/* 通知数量徽章 */}
           {toasts.length > 0 && (
             <div className="absolute text-2xl -top-2 -right-2 bg-red-500 text-white font-bold rounded-full w-7 h-7 flex items-center justify-center animate-pulse">
