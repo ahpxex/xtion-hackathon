@@ -30,7 +30,7 @@ export default function Home() {
           {isDev && <DevTools />}
           <FactoryIncomeManager />
           <CreditDisplay size="sm" />
-          <NativeButton clickValue={1}>Native Button</NativeButton>
+          <NativeButton clickValue={1}>click me</NativeButton>
           <Shop />
           <Leaderboard />
           <FloatingPanel />
