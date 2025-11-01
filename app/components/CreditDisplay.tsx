@@ -11,10 +11,6 @@ export default function CreditDisplay({ size = "m" }: CreditDisplayProps) {
   const [clickCount] = useAtom(clickCountAtom);
   const [displayLevel] = useAtom(displayUpgradeLevelAtom);
 
-  if (clickCount === 0) {
-    return null;
-  }
-
   const sizeClasses = {
     sm: "text-sm",
     m: "text-2xl",
@@ -79,21 +75,28 @@ export default function CreditDisplay({ size = "m" }: CreditDisplayProps) {
       </span>
     ) : null;
 
+  const hasCredits = clickCount > 0;
+  const displayValue = hasCredits
+    ? "点数：" + clickCount.toLocaleString()
+    : "\u00a0";
+
   return (
-    <div className={levelWrapperClasses[clampedLevel]}>
-      {prefixSparkle}
-      <p
-        className={`${sizeClasses[size]} font-bold ${
-          levelClasses[clampedLevel]
-        } ${
-          clampedLevel >= 5
-            ? "hover:shadow-[0_0_24px_rgba(248,113,113,0.55)]"
-            : ""
-        }`}
-      >
-        点数：{clickCount.toLocaleString()}
-      </p>
-      {suffixSparkle}
+    <div className="min-h-6 flex items-center justify-center">
+      <div className={levelWrapperClasses[clampedLevel]}>
+        {hasCredits && prefixSparkle}
+        <p
+          className={`${sizeClasses[size]} font-bold ${
+            levelClasses[clampedLevel]
+          } ${
+            clampedLevel >= 5
+              ? "hover:shadow-[0_0_24px_rgba(248,113,113,0.55)]"
+              : ""
+          }`}
+        >
+          {displayValue}
+        </p>
+        {hasCredits && suffixSparkle}
+      </div>
     </div>
   );
 }

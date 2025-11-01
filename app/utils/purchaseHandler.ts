@@ -25,6 +25,7 @@ export interface PurchaseContext {
   setShowStageIndicator?: (show: boolean) => void;
   setShowFloatingPanel?: (show: boolean) => void;
   setShowLeaderboard?: (show: boolean) => void;
+  setFancyButton?: (update: boolean | ((prev: boolean) => boolean)) => void;
   setFactoryLevel?: (level: number) => void;
   setBonusLevel?: (level: number) => void;
   setDisplayUpgradeLevel?: (level: number) => void;

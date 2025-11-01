@@ -43,10 +43,6 @@ export default function Shop() {
   const [, setLeaderboardBoostUntil] = useAtom(leaderboardBoostUntilAtom);
   const [, setLeaderboardComedownUntil] = useAtom(leaderboardComedownUntilAtom);
 
-  if (clickCount === 0) {
-    return null;
-  }
-
   const handlePurchase = (item: ShopItemData) => {
     const nextClickCount = Math.max(0, clickCount - item.price);
     const nextLevel =
@@ -95,14 +91,14 @@ export default function Shop() {
   };
 
   // 过滤掉隐藏的 items 和 stage 不够的 items
-  const visibleItems = shopItems.filter(item => {
+  const visibleItems = (clickCount === 0 ? [] : shopItems).filter(item => {
     if (item.hidden) return false;
     if (item.stageThreshold && stage < item.stageThreshold) return false;
     return true;
   });
 
   return (
-    <div className="flex flex-wrap gap-4 justify-center">
+    <div className="flex flex-wrap gap-4 justify-center min-h-[100px]">
       {visibleItems.map(item => (
         <ShopItem
           key={item.id}
