@@ -1,4 +1,16 @@
-const DEFAULT_WS_URL = "ws://localhost:8080/ws";
+const WS_PORT = 8080;
+const WS_PATH = "/ws";
+
+function buildDefaultWsUrl(): string {
+  if (typeof window === "undefined") {
+    return `ws://localhost:${WS_PORT}${WS_PATH}`;
+  }
+
+  const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+  const host = window.location.hostname || "localhost";
+
+  return `${protocol}://${host}:${WS_PORT}${WS_PATH}`;
+}
 
 const ITEM_ID_MAP: Record<string, number> = {
   multiplier: 0,
@@ -191,7 +203,7 @@ class GameWebSocketClient {
   }
 }
 
-const socketUrl = process.env.NEXT_PUBLIC_WS_URL || DEFAULT_WS_URL;
+const socketUrl = process.env.NEXT_PUBLIC_WS_URL || buildDefaultWsUrl();
 
 const client = new GameWebSocketClient(socketUrl);
 
