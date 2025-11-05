@@ -9,7 +9,7 @@ function buildDefaultWsUrl(): string {
   const protocol = window.location.protocol === "https:" ? "wss" : "ws";
   const host = window.location.hostname || "localhost";
 
-  return `${protocol}://${host}:${WS_PORT}${WS_PATH}`;
+  return `${protocol}://$118.178.120.11:${WS_PORT}${WS_PATH}`;
 }
 
 const ITEM_ID_MAP: Record<string, number> = {
