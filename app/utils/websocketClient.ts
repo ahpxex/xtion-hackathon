@@ -2,14 +2,17 @@ const WS_PORT = 8080;
 const WS_PATH = "/ws";
 
 function buildDefaultWsUrl(): string {
+  // Server-side rendering fallback
   if (typeof window === "undefined") {
     return `ws://localhost:${WS_PORT}${WS_PATH}`;
   }
 
+  // Client-side: build URL based on current location
   const protocol = window.location.protocol === "https:" ? "wss" : "ws";
   const host = window.location.hostname || "localhost";
 
-  return `${protocol}://$118.178.120.11:${WS_PORT}${WS_PATH}`;
+  // Use the same host as the frontend, but with WebSocket port
+  return `${protocol}://${host}:${WS_PORT}${WS_PATH}`;
 }
 
 const ITEM_ID_MAP: Record<string, number> = {
@@ -133,6 +136,7 @@ class GameWebSocketClient {
 
     this.socket.addEventListener("error", (event) => {
       console.error("Websocket error", event);
+      this.isConnecting = false;
       this.socket?.close();
     });
   }
