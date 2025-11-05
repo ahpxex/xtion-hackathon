@@ -1,18 +1,151 @@
-const WS_PORT = 8080;
-const WS_PATH = "/ws";
+const DEFAULT_WS_PORT = 8080;
+const DEFAULT_WS_PATH = "/ws";
 
-function buildDefaultWsUrl(): string {
-  // Server-side rendering fallback
-  if (typeof window === "undefined") {
-    return `ws://localhost:${WS_PORT}${WS_PATH}`;
+function readEnv(name: string): string | undefined {
+  const value = process.env[name];
+  if (typeof value !== "string") {
+    return undefined;
   }
 
-  // Client-side: build URL based on current location
-  const protocol = window.location.protocol === "https:" ? "wss" : "ws";
-  const host = window.location.hostname || "localhost";
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
 
-  // Use the same host as the frontend, but with WebSocket port
-  return `${protocol}://${host}:${WS_PORT}${WS_PATH}`;
+function parsePort(value?: string): number | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) {
+    return undefined;
+  }
+
+  const normalized = Math.floor(parsed);
+  if (normalized <= 0 || normalized > 65535) {
+    return undefined;
+  }
+
+  return normalized;
+}
+
+function sanitizePath(rawPath?: string): string {
+  if (!rawPath) {
+    return DEFAULT_WS_PATH;
+  }
+
+  const trimmed = rawPath.trim();
+  if (!trimmed) {
+    return DEFAULT_WS_PATH;
+  }
+
+  return trimmed.startsWith("/") ? trimmed : `/${trimmed}`;
+}
+
+function formatHost(host: string, port: number | null): string {
+  const trimmedHost = host.trim();
+  const needsBrackets = trimmedHost.includes(":") && !trimmedHost.startsWith("[");
+  const normalizedHost = needsBrackets ? `[${trimmedHost}]` : trimmedHost;
+
+  if (port === null) {
+    return normalizedHost;
+  }
+
+  return `${normalizedHost}:${port}`;
+}
+
+function determineProtocols(): string[] {
+  const explicitProtocol = readEnv("NEXT_PUBLIC_WS_PROTOCOL");
+  if (explicitProtocol) {
+    const normalized = explicitProtocol.toLowerCase();
+    if (normalized === "ws" || normalized === "wss") {
+      return [normalized];
+    }
+  }
+
+  const secureOverride = readEnv("NEXT_PUBLIC_WS_SECURE");
+  if (secureOverride) {
+    const normalized = secureOverride.toLowerCase();
+    if (normalized === "true") {
+      return ["wss"];
+    }
+    if (normalized === "false") {
+      return ["ws"];
+    }
+  }
+
+  const allowInsecureFallback =
+    (readEnv("NEXT_PUBLIC_WS_INSECURE_FALLBACK") ?? "").toLowerCase() === "true";
+
+  const isSecureOrigin =
+    typeof window !== "undefined" && window.location.protocol === "https:";
+
+  if (isSecureOrigin) {
+    return allowInsecureFallback ? ["wss", "ws"] : ["wss"];
+  }
+
+  return ["ws"];
+}
+
+function resolveWebSocketCandidates(): string[] {
+  const explicitUrl = readEnv("NEXT_PUBLIC_WS_URL");
+  if (explicitUrl) {
+    return [explicitUrl];
+  }
+
+  const path = sanitizePath(readEnv("NEXT_PUBLIC_WS_PATH"));
+
+  if (typeof window === "undefined") {
+    return [`ws://localhost:${DEFAULT_WS_PORT}${path}`];
+  }
+
+  const urls: string[] = [];
+  const protocols = determineProtocols();
+
+  const hostCandidates: string[] = [];
+  const envHost = readEnv("NEXT_PUBLIC_WS_HOST");
+  if (envHost) {
+    hostCandidates.push(envHost);
+  }
+  if (window.location.hostname) {
+    hostCandidates.push(window.location.hostname);
+  }
+  if (!hostCandidates.length) {
+    hostCandidates.push("localhost");
+  }
+  const uniqueHosts = hostCandidates.filter(
+    (value, index) => hostCandidates.indexOf(value) === index,
+  );
+
+  const portCandidates: Array<number | null> = [];
+  const envPort = parsePort(readEnv("NEXT_PUBLIC_WS_PORT"));
+  if (envPort !== undefined) {
+    portCandidates.push(envPort);
+  }
+  portCandidates.push(DEFAULT_WS_PORT);
+
+  const locationPort = parsePort(window.location.port || undefined);
+  if (locationPort !== undefined) {
+    portCandidates.push(locationPort);
+  }
+  portCandidates.push(null);
+
+  const uniquePorts = portCandidates.filter(
+    (value, index) => portCandidates.indexOf(value) === index,
+  );
+
+  protocols.forEach((protocol) => {
+    uniqueHosts.forEach((host) => {
+      uniquePorts.forEach((port) => {
+        const url = `${protocol}://${formatHost(host, port)}${path}`;
+        if (!urls.includes(url)) {
+          urls.push(url);
+        }
+      });
+    });
+  });
+
+  return urls;
 }
 
 const ITEM_ID_MAP: Record<string, number> = {
@@ -78,15 +211,22 @@ class GameWebSocketClient {
   private reconnectTimeoutId: number | null = null;
   private retryAttempt = 0;
   private readonly queuedMessages: string[] = [];
+  private candidateUrls: string[] = [];
+  private candidateCursor = 0;
+  private lastAttemptHadOpen = false;
+  private lastSuccessfulUrl: string | null = null;
+  private manualDisconnect = false;
+  private candidateSignature = "";
 
-  constructor(private readonly url: string) {}
+  constructor(private readonly candidateResolver: () => string[]) {}
 
   connect(): void {
     if (typeof window === "undefined") {
       return;
     }
 
-    if (this.socket && this.socket.readyState === ReadyState.OPEN) {
+    const existingReadyState = this.socket?.readyState;
+    if (existingReadyState === ReadyState.OPEN || existingReadyState === ReadyState.CONNECTING) {
       return;
     }
 
@@ -94,24 +234,41 @@ class GameWebSocketClient {
       return;
     }
 
-    this.isConnecting = true;
-
-    try {
-      this.socket = new WebSocket(this.url);
-    } catch (error) {
-      console.error("Failed to initialize websocket", error);
-      this.scheduleReconnect();
-      this.isConnecting = false;
+    this.refreshCandidates();
+    if (!this.candidateUrls.length) {
+      console.warn("GameWebSocketClient: no WebSocket endpoints resolved");
       return;
     }
 
-    this.socket.addEventListener("open", () => {
+    const targetIndex = this.candidateCursor % this.candidateUrls.length;
+    const targetUrl = this.candidateUrls[targetIndex];
+
+    this.isConnecting = true;
+    this.lastAttemptHadOpen = false;
+    this.manualDisconnect = false;
+
+    let socket: WebSocket;
+    try {
+      socket = new WebSocket(targetUrl);
+    } catch (error) {
+      console.error(`Failed to initialize websocket for ${targetUrl}`, error);
+      this.isConnecting = false;
+      this.scheduleReconnect(true);
+      return;
+    }
+
+    this.socket = socket;
+
+    socket.addEventListener("open", () => {
       this.isConnecting = false;
       this.retryAttempt = 0;
+      this.lastAttemptHadOpen = true;
+      this.lastSuccessfulUrl = targetUrl;
+      this.candidateCursor = this.candidateUrls.indexOf(targetUrl);
       this.flushQueue();
     });
 
-    this.socket.addEventListener("message", (event) => {
+    socket.addEventListener("message", (event) => {
       let parsed: ServerMessage | null = null;
       try {
         parsed = JSON.parse(event.data as string) as ServerMessage;
@@ -129,19 +286,21 @@ class GameWebSocketClient {
       });
     });
 
-    this.socket.addEventListener("close", () => {
-      this.isConnecting = false;
-      this.scheduleReconnect();
+    socket.addEventListener("close", () => {
+      this.handleSocketClosure(!this.lastAttemptHadOpen);
     });
 
-    this.socket.addEventListener("error", (event) => {
-      console.error("Websocket error", event);
-      this.isConnecting = false;
-      this.socket?.close();
+    socket.addEventListener("error", (event) => {
+      console.error(`Websocket error (${targetUrl})`, event);
+      this.handleSocketClosure(!this.lastAttemptHadOpen);
     });
   }
 
   disconnect(): void {
+    if (typeof window === "undefined") {
+      return;
+    }
+
     if (this.reconnectTimeoutId) {
       window.clearTimeout(this.reconnectTimeoutId);
       this.reconnectTimeoutId = null;
@@ -149,6 +308,7 @@ class GameWebSocketClient {
 
     this.retryAttempt = 0;
     this.isConnecting = false;
+    this.manualDisconnect = true;
 
     if (this.socket && this.socket.readyState <= ReadyState.OPEN) {
       this.socket.close();
@@ -192,9 +352,26 @@ class GameWebSocketClient {
     }
   }
 
-  private scheduleReconnect(): void {
+  private handleSocketClosure(advanceCandidate: boolean): void {
+    this.isConnecting = false;
+
+    this.socket = null;
+
+    if (this.manualDisconnect) {
+      this.manualDisconnect = false;
+      return;
+    }
+
+    this.scheduleReconnect(advanceCandidate);
+  }
+
+  private scheduleReconnect(advanceCandidate: boolean): void {
     if (this.reconnectTimeoutId !== null) {
       return;
+    }
+
+    if (advanceCandidate) {
+      this.advanceCandidateCursor();
     }
 
     const delay = Math.min(1000 * Math.pow(2, this.retryAttempt), 10000);
@@ -205,11 +382,40 @@ class GameWebSocketClient {
       this.connect();
     }, delay);
   }
+
+  private advanceCandidateCursor(): void {
+    if (!this.candidateUrls.length) {
+      this.refreshCandidates();
+    }
+
+    if (!this.candidateUrls.length) {
+      return;
+    }
+
+    this.candidateCursor = (this.candidateCursor + 1) % this.candidateUrls.length;
+  }
+
+  private refreshCandidates(): void {
+    const nextCandidates = this.candidateResolver();
+    const signature = nextCandidates.join("||");
+
+    if (signature === this.candidateSignature) {
+      return;
+    }
+
+    this.candidateUrls = nextCandidates;
+    this.candidateSignature = signature;
+
+    if (this.lastSuccessfulUrl) {
+      const index = this.candidateUrls.indexOf(this.lastSuccessfulUrl);
+      this.candidateCursor = index >= 0 ? index : 0;
+    } else {
+      this.candidateCursor = 0;
+    }
+  }
 }
 
-const socketUrl = process.env.NEXT_PUBLIC_WS_URL || buildDefaultWsUrl();
-
-const client = new GameWebSocketClient(socketUrl);
+const client = new GameWebSocketClient(resolveWebSocketCandidates);
 
 export function ensureGameSocketConnected(): void {
   client.connect();
